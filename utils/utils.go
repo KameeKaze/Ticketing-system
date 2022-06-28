@@ -37,6 +37,16 @@ func Logging(){
 	
 }
 
+//hash the user's password 
+func HashPassword(password string) string {
+	// Create a byte slice
+	var passwordBytes = []byte(password)
+	// Hash password
+	hashedPasswordBytes, _ := bcrypt.GenerateFromPassword(passwordBytes, bcrypt.MinCost)
+	return string(hashedPasswordBytes)
+}
+
+
 func Comparepassword(hashedPassword, password string) bool {
 	err := bcrypt.CompareHashAndPassword(
 		[]byte(hashedPassword), []byte(password))

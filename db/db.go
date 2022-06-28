@@ -6,9 +6,6 @@ import(
 
 	"github.com/KameeKaze/Ticketing-system/types"
 	"github.com/KameeKaze/Ticketing-system/utils"
-
-
-	
 )
 
 type Database struct {
@@ -43,8 +40,7 @@ func (h *Database) Close() {
 func (h *Database) CheckPassword(username, password string) bool {
 	//get hashed password for compare
 	var passwordHash string
-	h.db.QueryRow("SELECT password FROM users WHERE username = ?", username).Scan(&passwordHash)
-
+	h.db.QueryRow("SELECT password FROM users WHERE name = ?", username).Scan(&passwordHash)
 	//return if passwords maches
 	return utils.Comparepassword(passwordHash, password)
 }
@@ -59,6 +55,8 @@ func (h *Database) CheckUserExist(username string) bool {
 
 //add user: [name, password, role] into database
 func (h *Database) AddUser(user *types.Register) error {
+	user.Password = utils.HashPassword(user.Password)
+	fmt.Println(user.Password)
 	_, err := h.db.Exec("INSERT INTO users (id, name, password, role) VALUES (UUID(), ?, ?, ?)", user.Username, user.Password, user.Role)
 	return err
 }
