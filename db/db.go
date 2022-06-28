@@ -3,7 +3,6 @@ package db
 import(
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
-	"fmt"
 
 	"github.com/KameeKaze/Ticketing-system/types"
 	"github.com/KameeKaze/Ticketing-system/utils"
@@ -60,7 +59,19 @@ func (h *Database) CheckUserExist(username string) bool {
 
 //add user: [name, password, role] into database
 func (h *Database) AddUser(user *types.Register) error {
-	fmt.Println(user)
-	_, err := h.db.Exec("INSERT INTO users (id, name, password, role) VALUES (uuid(), ?, ?, ?)", user.Username, user.Password, user.Role)
+	_, err := h.db.Exec("INSERT INTO users (id, name, password, role) VALUES (UUID(), ?, ?, ?)", user.Username, user.Password, user.Role)
+	return err
+}
+
+
+func (h *Database) AddTicket(ticket *types.CreateTicket) error {
+	// get uuid of issue creator
+	err := h.db.QueryRow("SELECT id FROM users WHERE name = ?", ticket.Issuer).Scan(&ticket.Issuer)
+	if err != nil{
+		return err
+	}
+	// insert new ticket into database
+	_, err = h.db.Exec("INSERT INTO tickets (id, issuer, date, title, status, content) VALUES (UUID(), ?, CURRENT_TIMESTAMP(), ?, 0, ?)",
+											 ticket.Issuer, ticket.Title, ticket.Content)
 	return err
 }

@@ -27,3 +27,9 @@ type Register struct{
 	Password string `json:"password" validate:"required"`
 	Role     string `json:"role"     validate:"required"`
 }
+
+type CreateTicket struct{
+	Issuer  string `json:"issuer"  validate:"required"`
+	Title   string `json:"title"   validate:"required"`
+	Content string `json:"content" validate:"required"`
+}

@@ -27,6 +27,7 @@ func RoutesHandler() {
 	r.Get("/",home)
 	r.Post("/login",login)
 	r.Post("/register",register)
+	r.Post("/ticket/create", createTicket)
 
 	//start
 	fmt.Println("Running on http://127.0.0.1" + PORT)
@@ -35,12 +36,6 @@ func RoutesHandler() {
 
 func home(w http.ResponseWriter, r *http.Request){
 	w.Write([]byte("Ticketing system\n"))
-	database, err := db.ConnectDB()
-	if err != nil{
-		utils.Logger.Error(err.Error())
-	}
-	defer database.Close()
-	w.Write([]byte("Connected to database"))
 }
 
 func login(w http.ResponseWriter, r *http.Request){
@@ -50,6 +45,7 @@ func login(w http.ResponseWriter, r *http.Request){
 	database, err := db.ConnectDB()
 	if err != nil{
 		utils.Logger.Error(err.Error())
+		w.Write([]byte("Can't connect to database"))
 	}
 	defer database.Close()
 
@@ -78,6 +74,8 @@ func register(w http.ResponseWriter, r *http.Request){
 	database, err := db.ConnectDB()
 	if err != nil{
 		utils.Logger.Error(err.Error())
+		w.Write([]byte("Can't connect to database"))
+		return
 	}
 	defer database.Close()
 
@@ -98,8 +96,38 @@ func register(w http.ResponseWriter, r *http.Request){
 		err = database.AddUser(registerData)
 		if err != nil{
 			utils.Logger.Error(err.Error())
+			w.Write([]byte("Some error occured while creating user"))
+			return
 		}
 		w.Write([]byte("Creating user "+registerData.Username))
 	}
 
+}
+
+func createTicket(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	//connect to database
+	database, err := db.ConnectDB()
+	if err != nil{
+		utils.Logger.Error(err.Error())
+		w.Write([]byte("Can't connect to database"))
+	}
+	defer database.Close()
+
+	//decode body data 
+	data := &types.CreateTicket{}
+	json.NewDecoder(r.Body).Decode(&data)
+
+	// check if request was valid
+	if utils.ValidateJSON(data){
+		w.Write([]byte("Invalid request"))
+		return
+	}
+	
+	if database.AddTicket(data) != nil{
+		w.Write([]byte("Can't create ticket"))
+		return
+	}else{
+		w.Write([]byte("Ticket successfully created"))
+	}
 }

@@ -19,7 +19,7 @@ var Logger *zap.Logger
 //create logger
 func Logging(){
 	// the log file
-	logFile, _ := os.OpenFile("ticketing.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, _ := os.OpenFile("errors.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
 	// create config
 	config := zap.NewProductionEncoderConfig()
