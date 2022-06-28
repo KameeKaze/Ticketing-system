@@ -26,6 +26,7 @@ func RoutesHandler() {
 	//routes
 	r.Get("/",home)
 	r.Post("/login",login)
+	r.Post("/register",register)
 
 	//start
 	fmt.Println("Running on http://127.0.0.1" + PORT)
@@ -68,4 +69,37 @@ func login(w http.ResponseWriter, r *http.Request){
 		w.Write([]byte("Invalid login"))
 	}
 	
+}
+
+func register(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+
+	//connect to database
+	database, err := db.ConnectDB()
+	if err != nil{
+		utils.Logger.Error(err.Error())
+	}
+	defer database.Close()
+
+	//decode body data 
+	registerData := &types.Register{}
+	json.NewDecoder(r.Body).Decode(&registerData)
+
+	if utils.ValidateJSON(registerData){
+		w.Write([]byte("Invalid request"))
+		return
+	}
+
+	//check if user exoist
+	if database.CheckUserExist(registerData.Username){
+		w.Write([]byte("Username already taken"))
+		return
+	}else{
+		err = database.AddUser(registerData)
+		if err != nil{
+			utils.Logger.Error(err.Error())
+		}
+		w.Write([]byte("Creating user "+registerData.Username))
+	}
+
 }

@@ -3,8 +3,9 @@ package db
 import(
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
+	"fmt"
 
-	//"github.com/KameeKaze/Ticketing-system/types"
+	"github.com/KameeKaze/Ticketing-system/types"
 	"github.com/KameeKaze/Ticketing-system/utils"
 
 
@@ -39,7 +40,7 @@ func (h *Database) Close() {
 	h.db.Close()
 }
 
-// check if user exist
+// validate password for login
 func (h *Database) CheckPassword(username, password string) bool {
 	//get hashed password for compare
 	var passwordHash string
@@ -47,4 +48,19 @@ func (h *Database) CheckPassword(username, password string) bool {
 
 	//return if passwords maches
 	return utils.Comparepassword(passwordHash, password)
+}
+
+//check if username already exist
+func (h *Database) CheckUserExist(username string) bool {
+	var exist string
+	h.db.QueryRow("SELECT name FROM users WHERE name = ?", username).Scan(&exist)
+	return exist != ""
+}
+
+
+//add user: [name, password, role] into database
+func (h *Database) AddUser(user *types.Register) error {
+	fmt.Println(user)
+	_, err := h.db.Exec("INSERT INTO users (id, name, password, role) VALUES (uuid(), ?, ?, ?)", user.Username, user.Password, user.Role)
+	return err
 }
