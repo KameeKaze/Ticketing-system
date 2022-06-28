@@ -3,6 +3,11 @@ package db
 import(
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
+
+	//"github.com/KameeKaze/Ticketing-system/types"
+	"github.com/KameeKaze/Ticketing-system/utils"
+
+
 	
 )
 
@@ -32,4 +37,14 @@ func ConnectDB() (*Database, error) {
 
 func (h *Database) Close() {
 	h.db.Close()
+}
+
+// check if user exist
+func (h *Database) CheckPassword(username, password string) bool {
+	//get hashed password for compare
+	var passwordHash string
+	h.db.QueryRow("SELECT password FROM users WHERE username = ?", username).Scan(&passwordHash)
+
+	//return if passwords maches
+	return utils.Comparepassword(passwordHash, password)
 }

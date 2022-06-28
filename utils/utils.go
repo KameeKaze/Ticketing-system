@@ -4,6 +4,7 @@ import(
 	"os"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func init(){
@@ -32,4 +33,10 @@ func Logging(){
 	)
 	Logger = zap.New(core,zap.AddCaller())
 	
+}
+
+func Comparepassword(hashedPassword, password string) bool {
+	err := bcrypt.CompareHashAndPassword(
+		[]byte(hashedPassword), []byte(password))
+	return err == nil
 }
