@@ -6,6 +6,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/KameeKaze/Ticketing-system/db"
+
 )
 
 const(
@@ -21,5 +23,11 @@ func RoutesHandler() {
 }
 
 func home(w http.ResponseWriter, r *http.Request){
-	w.Write([]byte("Ticketing system"))
+	w.Write([]byte("Ticketing system\n"))
+	database, err := db.ConnectDB()
+	if err != nil{
+		fmt.Println(err)
+	}
+	defer database.Close()
+	w.Write([]byte("Connected to database"))
 }
