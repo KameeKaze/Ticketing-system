@@ -11,6 +11,7 @@ import (
 	"github.com/KameeKaze/Ticketing-system/types"
 	"github.com/KameeKaze/Ticketing-system/db"
 	"github.com/KameeKaze/Ticketing-system/utils"
+	
 
 )
 
@@ -56,7 +57,7 @@ func login(w http.ResponseWriter, r *http.Request){
 	json.NewDecoder(r.Body).Decode(&loginData)
 
 	// check if request was valid
-	if loginData.Username == "" || loginData.Password == "" {
+	if utils.ValidateJSON(loginData){
 		w.Write([]byte("Invalid request"))
 		return
 	}

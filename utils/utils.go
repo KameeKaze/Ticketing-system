@@ -5,6 +5,8 @@ import(
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/go-playground/validator/v10"
 )
 
 func init(){
@@ -39,4 +41,9 @@ func Comparepassword(hashedPassword, password string) bool {
 	err := bcrypt.CompareHashAndPassword(
 		[]byte(hashedPassword), []byte(password))
 	return err == nil
+}
+
+func ValidateJSON(data interface{}) bool {
+	validate := validator.New()
+	return validate.Struct(data) != nil
 }
