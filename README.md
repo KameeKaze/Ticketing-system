@@ -6,9 +6,9 @@
 
 ```
 {
-	"username":"John Doe",
-	"password":"secretpassword123",
-	"role":"programmer"
+    "username":"John Doe",
+    "password":"secretpassword123",
+    "role":"programmer"
 }
 ```
 
@@ -16,7 +16,7 @@
 
 ```
 {
-	"username":"John Doe",
+    "username":"John Doe",
     "password":"secretpassword123"
 }
 ```
@@ -25,8 +25,8 @@
 
 ```
 {
-	"issuer":"John Doe",
-	"title":"This is a ticket",
-	"content":"Lorem Ipsum"
+    "issuer":"John Doe",
+    "title":"This is a ticket",
+    "content":"Lorem Ipsum"
 }
 ```
