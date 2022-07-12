@@ -33,3 +33,11 @@ type CreateTicket struct{
 	Title   string `json:"title"   validate:"required"`
 	Content string `json:"content" validate:"required"`
 }
+
+type GetTickets struct{
+	Username string `json:"username" validate:"required"`
+}
+
+type ResponseBody struct {
+    Msg string `json:"Message"`
+}

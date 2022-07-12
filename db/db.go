@@ -56,7 +56,6 @@ func (h *Database) CheckUserExist(username string) bool {
 //add user: [name, password, role] into database
 func (h *Database) AddUser(user *types.Register) error {
 	user.Password = utils.HashPassword(user.Password)
-	fmt.Println(user.Password)
 	_, err := h.db.Exec("INSERT INTO users (id, name, password, role) VALUES (UUID(), ?, ?, ?)", user.Username, user.Password, user.Role)
 	return err
 }

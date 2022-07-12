@@ -1,23 +1,26 @@
 package utils
 
-import(
-	"os"
+import (
+	"encoding/json"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"os"
 
 	"github.com/go-playground/validator/v10"
+
+	"github.com/KameeKaze/Ticketing-system/types"
 )
 
-func init(){
+func init() {
 	Logging()
 }
-
 
 var Logger *zap.Logger
 
 //create logger
-func Logging(){
+func Logging() {
 	// the log file
 	logFile, _ := os.OpenFile("errors.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
@@ -28,16 +31,16 @@ func Logging(){
 	// create encoder for both terminal and logfile
 	fileEncoder := zapcore.NewJSONEncoder(config)
 	consoleEncoder := zapcore.NewConsoleEncoder(config)
-	
+
 	core := zapcore.NewTee(
 		zapcore.NewCore(fileEncoder, zapcore.AddSync(logFile), zap.DebugLevel),
 		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zap.DebugLevel),
 	)
-	Logger = zap.New(core,zap.AddCaller())
-	
+	Logger = zap.New(core, zap.AddCaller())
+
 }
 
-//hash the user's password 
+//hash the user's password
 func HashPassword(password string) string {
 	// Create a byte slice
 	var passwordBytes = []byte(password)
@@ -45,7 +48,6 @@ func HashPassword(password string) string {
 	hashedPasswordBytes, _ := bcrypt.GenerateFromPassword(passwordBytes, bcrypt.MinCost)
 	return string(hashedPasswordBytes)
 }
-
 
 func Comparepassword(hashedPassword, password string) bool {
 	err := bcrypt.CompareHashAndPassword(
@@ -56,4 +58,15 @@ func Comparepassword(hashedPassword, password string) bool {
 func ValidateJSON(data interface{}) bool {
 	validate := validator.New()
 	return validate.Struct(data) != nil
+}
+
+func CreateHttpResponse(w http.ResponseWriter, statusCode int, text string) {
+	//set status code
+	w.WriteHeader(statusCode)
+	//create json
+	r, _ := json.Marshal(types.ResponseBody{
+		Msg: text,
+	})
+	//send data
+	w.Write([]byte(r))
 }
