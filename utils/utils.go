@@ -5,10 +5,12 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/crypto/bcrypt"
-	"net/http"
 	"os"
+	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 
 	"github.com/KameeKaze/Ticketing-system/types"
 )
@@ -69,4 +71,20 @@ func CreateHttpResponse(w http.ResponseWriter, statusCode int, text string) {
 	})
 	//send data
 	w.Write([]byte(r))
+}
+
+func SetSessionCookie(w http.ResponseWriter){
+	// generate uuid for session
+	sessionUUID := uuid.New().String()
+	expTime := time.Now().Local().Add(time.Hour * time.Duration(2))
+	// generate http cookie
+	cookie := &http.Cookie{
+		Name:     "session",
+		Value:    sessionUUID,
+		HttpOnly: true,
+		Expires:  expTime,
+		Path:     "/",
+	}
+	// set cookie
+	http.SetCookie(w, cookie)
 }

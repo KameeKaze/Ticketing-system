@@ -60,6 +60,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if database.CheckPassword(loginData.Username, loginData.Password) {
+		utils.SetSessionCookie(w)
 		utils.CreateHttpResponse(w, 200, "Succesful login")
 	} else {
 		utils.CreateHttpResponse(w, 401, "Invalid credentials")
