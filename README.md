@@ -21,7 +21,7 @@
 }
 ```
 
-**POST** `/ticket/create/`
+**POST** `/tickets/create/`
 
 ```
 {
