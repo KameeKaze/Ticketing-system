@@ -3,6 +3,7 @@ package db
 import(
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
+	"time"
 
 	"github.com/KameeKaze/Ticketing-system/types"
 	"github.com/KameeKaze/Ticketing-system/utils"
@@ -70,5 +71,17 @@ func (h *Database) AddTicket(ticket *types.CreateTicket) error {
 	// insert new ticket into database
 	_, err = h.db.Exec("INSERT INTO tickets (id, issuer, date, title, status, content) VALUES (UUID(), ?, CURRENT_TIMESTAMP(), ?, 0, ?)",
 											 ticket.Issuer, ticket.Title, ticket.Content)
+	return err
+}
+
+func (h *Database) GetUserId(username string) (userId string) {
+	h.db.QueryRow("SELECT id FROM users WHERE name = ?", username).
+		Scan(&userId)
+	return
+}
+
+func (h *Database) SaveCookie(userId, cookie string, expires *time.Time) error {
+	_, err := h.db.Exec("INSERT INTO sessions (userid, cookie, expires) VALUES (?, ?, ?)",
+									userId, cookie, expires.Unix())	
 	return err
 }

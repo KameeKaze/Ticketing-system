@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/google/uuid"
 
 	"github.com/KameeKaze/Ticketing-system/db"
 	"github.com/KameeKaze/Ticketing-system/types"
@@ -60,12 +62,37 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if database.CheckPassword(loginData.Username, loginData.Password) {
-		utils.SetSessionCookie(w)
+		utils.Logger.Info(loginData.Username)
+		setSessionCookie(w, database.GetUserId(loginData.Username))
 		utils.CreateHttpResponse(w, 200, "Succesful login")
 	} else {
 		utils.CreateHttpResponse(w, 401, "Invalid credentials")
 	}
 
+}
+
+func setSessionCookie(w http.ResponseWriter, userId string){
+	database, err := db.ConnectDB()
+	if err != nil {
+		return
+	}
+	defer database.Close()
+
+	// generate http cookie
+	cookie := &http.Cookie{
+		Name:     "session",
+		Value:    uuid.New().String(),
+		HttpOnly: true,
+		Expires:  time.Now().Local().Add(time.Hour * time.Duration(2)),
+		Path:     "/",
+	}
+	// save cookie in database
+	err = database.SaveCookie(userId, cookie.Value, &cookie.Expires)
+	if err != nil{
+		utils.Logger.Error(err.Error())
+	}
+	// set cookie
+	http.SetCookie(w, cookie)
 }
 
 func register(w http.ResponseWriter, r *http.Request) {

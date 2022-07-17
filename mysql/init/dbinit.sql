@@ -24,3 +24,10 @@ CREATE TABLE tickets (
     content  TEXT        NOT NULL,
     FOREIGN KEY (issuer) REFERENCES users(id)
 );
+
+CREATE TABLE sessions (
+    userid     VARCHAR(36) NOT NULL,
+    cookie     VARCHAR(36) NOT NULL,
+    expires    INT(11)     NOT NULL,
+    FOREIGN KEY (userid) REFERENCES users(id)
+)
