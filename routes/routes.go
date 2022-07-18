@@ -37,7 +37,7 @@ func RoutesHandler() {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	utils.CreateHttpResponse(w, 200, "Ticketing system")
+	utils.CreateHttpResponse(w, http.StatusOK, "Ticketing system")
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +47,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	database, err := db.ConnectDB()
 	if err != nil {
 		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, 500, "Can't connect to database")
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
 		return
 	}
 	defer database.Close()
@@ -58,7 +58,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	// check if request was valid
 	if utils.ValidateJSON(loginData) {
-		utils.CreateHttpResponse(w, 400, "Invalid request")
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "Invalid request")
 		return
 	}
 
@@ -67,14 +67,14 @@ func login(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session")
 		if err != nil || !(database.ValidateUserSession(cookie.Value, database.GetUserId(loginData.Username))){
 			setSessionCookie(w, database.GetUserId(loginData.Username))
-			utils.CreateHttpResponse(w, 200, "Succesful login")
+			utils.CreateHttpResponse(w, http.StatusOK, "Succesful login")
 			return
 		}else{ // validate cookie
-				utils.CreateHttpResponse(w, 406, "Already logged in")
+				utils.CreateHttpResponse(w, http.StatusNotAcceptable, "Already logged in")
 				return
 		}
 	} else {
-		utils.CreateHttpResponse(w, 401, "Invalid credentials")
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
 }
@@ -116,14 +116,14 @@ func logout(w http.ResponseWriter, r *http.Request){
 	database, err := db.ConnectDB()
 	if err != nil {
 		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, 500, "Can't connect to database")
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
 		return
 	}
 	defer database.Close()
 
 	cookie, err := r.Cookie("session")
 	if err != nil || !(database.ValidateSession(cookie.Value)){
-		utils.CreateHttpResponse(w, 401, "Not logged in")
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Not logged in")
 		return
 	}else{
 		//delete cookie
@@ -131,7 +131,7 @@ func logout(w http.ResponseWriter, r *http.Request){
 			utils.Logger.Error(err.Error())
 		}
 
-		utils.CreateHttpResponse(w, 205, "Logging out")
+		utils.CreateHttpResponse(w, http.StatusResetContent, "Logging out")
 
 	}
 }
@@ -143,7 +143,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	database, err := db.ConnectDB()
 	if err != nil {
 		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, 500, "Can't connect to database")
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
 		return
 	}
 	defer database.Close()
@@ -153,22 +153,22 @@ func register(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&registerData)
 
 	if utils.ValidateJSON(registerData) {
-		utils.CreateHttpResponse(w, 400, "Invalid request")
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "Invalid request")
 		return
 	}
 
 	//check if user exist
 	if database.CheckUserExist(registerData.Username) {
-		utils.CreateHttpResponse(w, 409, "Username already taken")
+		utils.CreateHttpResponse(w, http.StatusConflict, "Username already taken")
 		return
 	} else {
 		err = database.AddUser(registerData)
 		if err != nil {
 			utils.Logger.Error(err.Error())
-			utils.CreateHttpResponse(w, 400, "Invalid request")
+			utils.CreateHttpResponse(w, http.StatusBadRequest, "Invalid request")
 			return
 		} else {
-			utils.CreateHttpResponse(w, 201, "Creating user "+registerData.Username)
+			utils.CreateHttpResponse(w, http.StatusCreated, "Creating user "+registerData.Username)
 		}
 	}
 
@@ -180,7 +180,7 @@ func createTicket(w http.ResponseWriter, r *http.Request) {
 	database, err := db.ConnectDB()
 	if err != nil {
 		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, 500, "Can't connect to database")
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
 	}
 	defer database.Close()
 
@@ -190,15 +190,15 @@ func createTicket(w http.ResponseWriter, r *http.Request) {
 
 	// check if request was valid
 	if utils.ValidateJSON(data) {
-		utils.CreateHttpResponse(w, 400, "Invalid request")
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "Invalid request")
 		return
 	}
 
 	if database.AddTicket(data) != nil {
-		utils.CreateHttpResponse(w, 500, "Can't create ticket")
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't create ticket")
 		return
 	} else {
-		utils.CreateHttpResponse(w, 201, "Ticket successfully created")
+		utils.CreateHttpResponse(w, http.StatusCreated, "Ticket successfully created")
 	}
 }
 
@@ -209,7 +209,7 @@ func allTickets(w http.ResponseWriter, r *http.Request) {
 	database, err := db.ConnectDB()
 	if err != nil {
 		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, 500, "Can't connect to database")
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
 		return
 	}
 	defer database.Close()
