@@ -5,19 +5,18 @@ import(
 )
 
 type User struct{
-	Id       string
+	Id       string `json:"id"`
 	Name     string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
 	Role     string `json:"role"`
 }
 
 type Ticket struct{
-	Id      string
-	Issuer  User
-	Date    time.Time
-	Title   string
-	Status  int 
-	Content string
+	Id      string    `json:"id"`
+	Issuer  User	  `json:"issuer"`
+	Date    time.Time `json:"date"`
+	Title   string    `json:"title"`
+	Status  int       `json:"status"`
+	Content string    `json:"content"`
 }
 
 

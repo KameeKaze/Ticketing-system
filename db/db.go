@@ -69,8 +69,8 @@ func (h *Database) AddTicket(ticket *types.CreateTicket) error {
 		return err
 	}
 	// insert new ticket into database
-	_, err = h.db.Exec("INSERT INTO tickets (id, issuer, date, title, status, content) VALUES (UUID(), ?, CURRENT_TIMESTAMP(), ?, 0, ?)",
-											 ticket.Issuer, ticket.Title, ticket.Content)
+	_, err = h.db.Exec("INSERT INTO tickets (id, issuer, date, title, status, content) VALUES (UUID(), ?, ?, ?, 0, ?)",
+											 ticket.Issuer, time.Now().Local().Unix(), ticket.Title, ticket.Content)
 	return err
 }
 
@@ -82,7 +82,7 @@ func (h *Database) GetUserId(username string) (userId string) {
 
 func (h *Database) GetUser(userId string) (user types.User) {
 	h.db.QueryRow("SELECT id, name, role FROM users WHERE id = ?", userId).
-		Scan(&user.Id, &user.Name, &user.Id, &user.Id)
+		Scan(&user.Id, &user.Name, &user.Role)
 	return
 }
 

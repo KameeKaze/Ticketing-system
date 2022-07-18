@@ -15,7 +15,7 @@ CREATE TABLE users (
 CREATE TABLE tickets (
     id       VARCHAR(36) NOT NULL PRIMARY KEY,
     issuer   VARCHAR(36) NOT NULL,
-    date     DATETIME    NOT NULL,
+    date     INT(11)     NOT NULL,
     title    TINYTEXT    NOT NULL,
     status   INT         NOT NULL,
     content  TEXT        NOT NULL,
