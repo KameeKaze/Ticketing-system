@@ -2,7 +2,7 @@
 
 ## A simple open-source ticketing system written in go.
 
-**POST** `/register/`
+**POST** `/register`
 
 ```
 {
@@ -12,7 +12,7 @@
 }
 ```
 
-**POST** `/login/`
+**POST** `/login`
 
 ```
 {
@@ -21,7 +21,13 @@
 }
 ```
 
-**POST** `/tickets/create/`
+**DELETE** `/logout`
+
+```
+Cookie: session=<sessionid>
+```
+
+**POST** `/tickets/create`
 
 ```
 {
