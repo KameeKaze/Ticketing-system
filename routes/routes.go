@@ -62,14 +62,22 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if database.CheckPassword(loginData.Username, loginData.Password) {
-		utils.Logger.Info(loginData.Username)
-		setSessionCookie(w, database.GetUserId(loginData.Username))
-		utils.CreateHttpResponse(w, 200, "Succesful login")
+		//check if cookie already set
+		cookie, err := r.Cookie("session")
+		if err != nil || database.ValidateSessionCookie(cookie.Value, database.GetUserId(loginData.Username)){
+			setSessionCookie(w, database.GetUserId(loginData.Username))
+			utils.CreateHttpResponse(w, 200, "Succesful login")
+			return
+		}else{ // validate cookie
+				utils.CreateHttpResponse(w, 406, "Already logged in")
+				return
+		}
 	} else {
 		utils.CreateHttpResponse(w, 401, "Invalid credentials")
+		return
 	}
-
 }
+
 
 func setSessionCookie(w http.ResponseWriter, userId string){
 	database, err := db.ConnectDB()
@@ -86,11 +94,16 @@ func setSessionCookie(w http.ResponseWriter, userId string){
 		Expires:  time.Now().Local().Add(time.Hour * time.Duration(2)),
 		Path:     "/",
 	}
-	// save cookie in database
-	err = database.SaveCookie(userId, cookie.Value, &cookie.Expires)
+	// save or update cookie in database
+	if database.SessionExist(userId, cookie.Value){
+		err = database.SaveCookie(userId, cookie.Value, &cookie.Expires)
+	}else{
+		err = database.UpdateCookie(userId, cookie.Value, &cookie.Expires)
+	}
 	if err != nil{
 		utils.Logger.Error(err.Error())
 	}
+
 	// set cookie
 	http.SetCookie(w, cookie)
 }
@@ -116,7 +129,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//check if user exoist
+	//check if user exist
 	if database.CheckUserExist(registerData.Username) {
 		utils.CreateHttpResponse(w, 409, "Username already taken")
 		return

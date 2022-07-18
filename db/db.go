@@ -80,8 +80,30 @@ func (h *Database) GetUserId(username string) (userId string) {
 	return
 }
 
-func (h *Database) SaveCookie(userId, cookie string, expires *time.Time) error {
+func (h *Database) UpdateCookie(userId, cookie string, expires *time.Time) error {
 	_, err := h.db.Exec("INSERT INTO sessions (userid, cookie, expires) VALUES (?, ?, ?)",
 									userId, cookie, expires.Unix())	
 	return err
+}
+
+func (h *Database) SaveCookie(userId, cookie string, expires *time.Time) error {
+	_, err := h.db.Exec("UPDATE sessions SET cookie = ? WHERE userid = ?",
+									userId, cookie)	
+	return err
+}
+
+
+func (h *Database) ValidateSessionCookie(cookie, userId string) bool {
+	var dbCookie string
+	h.db.QueryRow("SELECT cookie FROM sessions WHERE userid = ?", userId).
+	Scan(&dbCookie)
+	return cookie != dbCookie
+}
+
+func (h *Database) SessionExist(userId, cookie string) bool{
+	err := h.db.QueryRow("SELECT cookie FROM sessions WHERE userid = ?", userId).
+		Scan(&cookie)
+	return err == nil
+
+
 }
