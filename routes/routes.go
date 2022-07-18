@@ -28,6 +28,7 @@ func RoutesHandler() {
 	r.Post("/login", login)
 	r.Post("/register", register)
 	r.Post("/tickets/create", createTicket)
+	r.Delete("/logout", logout)
 	r.Get("/tickets", allTickets)
 
 	//start
@@ -64,7 +65,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if database.CheckPassword(loginData.Username, loginData.Password) {
 		//check if cookie already set
 		cookie, err := r.Cookie("session")
-		if err != nil || database.ValidateSessionCookie(cookie.Value, database.GetUserId(loginData.Username)){
+		if err != nil || !(database.ValidateUserSession(cookie.Value, database.GetUserId(loginData.Username))){
 			setSessionCookie(w, database.GetUserId(loginData.Username))
 			utils.CreateHttpResponse(w, 200, "Succesful login")
 			return
@@ -95,7 +96,7 @@ func setSessionCookie(w http.ResponseWriter, userId string){
 		Path:     "/",
 	}
 	// save or update cookie in database
-	if database.SessionExist(userId, cookie.Value){
+	if !(database.SessionExist(cookie.Value)){
 		err = database.SaveCookie(userId, cookie.Value, &cookie.Expires)
 	}else{
 		err = database.UpdateCookie(userId, cookie.Value, &cookie.Expires)
@@ -106,6 +107,33 @@ func setSessionCookie(w http.ResponseWriter, userId string){
 
 	// set cookie
 	http.SetCookie(w, cookie)
+}
+
+func logout(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+
+	//connect to database
+	database, err := db.ConnectDB()
+	if err != nil {
+		utils.Logger.Error(err.Error())
+		utils.CreateHttpResponse(w, 500, "Can't connect to database")
+		return
+	}
+	defer database.Close()
+
+	cookie, err := r.Cookie("session")
+	if err != nil || !(database.ValidateSession(cookie.Value)){
+		utils.CreateHttpResponse(w, 401, "Not logged in")
+		return
+	}else{
+		//delete cookie
+		if err := database.DeleteCookie(cookie.Value); err != nil{
+			utils.Logger.Error(err.Error())
+		}
+
+		utils.CreateHttpResponse(w, 205, "Logging out")
+
+	}
 }
 
 func register(w http.ResponseWriter, r *http.Request) {

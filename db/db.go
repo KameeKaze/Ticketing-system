@@ -92,18 +92,27 @@ func (h *Database) SaveCookie(userId, cookie string, expires *time.Time) error {
 	return err
 }
 
-
-func (h *Database) ValidateSessionCookie(cookie, userId string) bool {
-	var dbCookie string
-	h.db.QueryRow("SELECT cookie FROM sessions WHERE userid = ?", userId).
-	Scan(&dbCookie)
-	return cookie != dbCookie
+func (h *Database) SessionExist(cookie string) bool{
+	var expires int64
+	h.db.QueryRow("SELECT expires FROM sessions WHERE cookie = ?", cookie).Scan(&expires)
+	return expires == 0
 }
 
-func (h *Database) SessionExist(userId, cookie string) bool{
-	err := h.db.QueryRow("SELECT cookie FROM sessions WHERE userid = ?", userId).
-		Scan(&cookie)
-	return err == nil
 
+func (h *Database) ValidateUserSession(cookie, userId string) bool{
+	var dbCookie string
+	h.db.QueryRow("SELECT cookie FROM sessions WHERE userid = ?", userId).
+		Scan(&dbCookie)
+	return cookie == dbCookie
+}
 
+func (h *Database) ValidateSession(cookie string) bool{
+	var expires int64
+	h.db.QueryRow("SELECT expires FROM sessions WHERE cookie = ?", cookie).Scan(&expires)
+	return expires > time.Now().Local().Unix()
+}
+
+func (h *Database)  DeleteCookie(cookie string) error {
+	_, err := h.db.Exec("DELETE FROM sessions WHERE cookie = ?", cookie)	
+ 	return err
 }
