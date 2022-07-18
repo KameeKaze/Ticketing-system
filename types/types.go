@@ -1,21 +1,25 @@
 package types
 
+import(
+	"time"
+)
+
 type User struct{
+	Id       string
 	Name     string `json:"username" validate:"required"`
-	Email    string `json:"email"`
 	Password string `json:"password" validate:"required"`
 	Role     string `json:"role"`
 }
 
 type Ticket struct{
-	Issuer *User
-	Date    string
+	Id      string
+	Issuer  User
+	Date    time.Time
 	Title   string
-	Priority   int 
-	Type    string
+	Status  int 
 	Content string
-	Status  string 
 }
+
 
 type Login struct{
 	Username string `json:"username" validate:"required"`
@@ -34,10 +38,6 @@ type CreateTicket struct{
 	Content string `json:"content" validate:"required"`
 }
 
-type GetTickets struct{
-	Username string `json:"username" validate:"required"`
-}
-
 type ResponseBody struct {
-    Msg string `json:"Message"`
+    Msg interface{} `json:"Message"`
 }

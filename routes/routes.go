@@ -214,14 +214,7 @@ func allTickets(w http.ResponseWriter, r *http.Request) {
 	}
 	defer database.Close()
 
-	//decode body data
-	getTickets := &types.GetTickets{}
-	json.NewDecoder(r.Body).Decode(&getTickets)
-
-	// check if request was valid
-	if utils.ValidateJSON(getTickets) {
-		utils.CreateHttpResponse(w, 400, "Invalid request")
-		return
-	}
-
+	tickets, err := database.GetAllTickets()
+	j, err := json.Marshal(tickets)
+	w.Write([]byte(j))
 }

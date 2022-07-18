@@ -80,6 +80,12 @@ func (h *Database) GetUserId(username string) (userId string) {
 	return
 }
 
+func (h *Database) GetUser(userId string) (user types.User) {
+	h.db.QueryRow("SELECT id, name, role FROM users WHERE id = ?", userId).
+		Scan(&user.Id, &user.Name, &user.Id, &user.Id)
+	return
+}
+
 func (h *Database) UpdateCookie(userId, cookie string, expires *time.Time) error {
 	_, err := h.db.Exec("INSERT INTO sessions (userid, cookie, expires) VALUES (?, ?, ?)",
 									userId, cookie, expires.Unix())	
@@ -112,7 +118,24 @@ func (h *Database) ValidateSession(cookie string) bool{
 	return expires > time.Now().Local().Unix()
 }
 
-func (h *Database)  DeleteCookie(cookie string) error {
+func (h *Database) DeleteCookie(cookie string) error {
 	_, err := h.db.Exec("DELETE FROM sessions WHERE cookie = ?", cookie)	
  	return err
+}
+
+func (h *Database) GetAllTickets() (tickets []*types.Ticket, err error){
+	rows, err := h.db.Query("SELECT id, title, status, content, issuer, date FROM tickets")
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		ticket := &types.Ticket{}
+		var date   int64
+		var issuer string
+		rows.Scan(&ticket.Id, &ticket.Title, &ticket.Status, &ticket.Content, &issuer, &date)
+		ticket.Issuer = h.GetUser(issuer)
+		ticket.Date = time.Unix(date, 0)
+		tickets = append(tickets, ticket)
+	}
+	return
 }
