@@ -86,29 +86,35 @@ func (h *Database) GetUser(userId string) (user types.User) {
 	return
 }
 
-func (h *Database) UpdateCookie(userId, cookie string, expires *time.Time) error {
+func (h *Database) SaveCookie(userId, cookie string, expires *time.Time) error {
 	_, err := h.db.Exec("INSERT INTO sessions (userid, cookie, expires) VALUES (?, ?, ?)",
 									userId, cookie, expires.Unix())	
 	return err
 }
 
-func (h *Database) SaveCookie(userId, cookie string, expires *time.Time) error {
-	_, err := h.db.Exec("UPDATE sessions SET cookie = ? WHERE userid = ?",
-									userId, cookie)	
+func (h *Database) UpdateCookie(userId, cookie string, expires *time.Time) error {
+	_, err := h.db.Exec("UPDATE sessions SET cookie = ?, expires = ? WHERE userid = ?",
+									cookie, expires.Unix(), userId)	
 	return err
 }
 
 func (h *Database) SessionExist(cookie string) bool{
 	var expires int64
 	h.db.QueryRow("SELECT expires FROM sessions WHERE cookie = ?", cookie).Scan(&expires)
-	return expires == 0
+	return expires != 0
 }
 
+func (h *Database) UserHasSession(userId string) bool{
+	var expires int64
+	h.db.QueryRow("SELECT expires FROM sessions WHERE userid = ?", userId).Scan(&expires)
+	return expires != 0
+}
 
 func (h *Database) ValidateUserSession(cookie, userId string) bool{
 	var dbCookie string
-	h.db.QueryRow("SELECT cookie FROM sessions WHERE userid = ?", userId).
-		Scan(&dbCookie)
+	var expires int64
+	h.db.QueryRow("SELECT cookie, expires FROM sessions WHERE userid = ?", userId).
+		Scan(&dbCookie, &expires)
 	return cookie == dbCookie
 }
 

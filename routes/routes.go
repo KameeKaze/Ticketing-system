@@ -64,16 +64,10 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	if database.CheckPassword(loginData.Username, loginData.Password) {
 		//check if cookie already set
-		cookie, err := r.Cookie("session")
-		if err != nil || !(database.ValidateUserSession(cookie.Value, database.GetUserId(loginData.Username))){
-			setSessionCookie(w, database.GetUserId(loginData.Username))
-			utils.CreateHttpResponse(w, http.StatusOK, "Succesful login")
-			return
-		}else{ // validate cookie
-				utils.CreateHttpResponse(w, http.StatusNotAcceptable, "Already logged in")
-				return
-		}
-	} else {
+		setSessionCookie(w, database.GetUserId(loginData.Username))
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Logging in")
+
+	}else {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
@@ -92,21 +86,21 @@ func setSessionCookie(w http.ResponseWriter, userId string){
 		Name:     "session",
 		Value:    uuid.New().String(),
 		HttpOnly: true,
-		Expires:  time.Now().Local().Add(time.Hour * time.Duration(2)),
+		Expires:  time.Now().Local().Add(time.Second * time.Duration(2)),
 		Path:     "/",
 	}
-	// save or update cookie in database
-	if !(database.SessionExist(cookie.Value)){
-		err = database.SaveCookie(userId, cookie.Value, &cookie.Expires)
-	}else{
+	if database.UserHasSession(userId){
 		err = database.UpdateCookie(userId, cookie.Value, &cookie.Expires)
+		fmt.Println("update")
+	}else{
+		err = database.SaveCookie(userId, cookie.Value, &cookie.Expires)
+		fmt.Println("save")
 	}
-	if err != nil{
-		utils.Logger.Error(err.Error())
-	}
-
+	fmt.Println(err)
 	// set cookie
 	http.SetCookie(w, cookie)
+	fmt.Println(err)
+	return
 }
 
 func logout(w http.ResponseWriter, r *http.Request){
