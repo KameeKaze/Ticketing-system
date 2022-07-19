@@ -204,6 +204,8 @@ func createTicket(w http.ResponseWriter, r *http.Request) {
 
 func allTickets(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	//query user parameter
+
 
 	//connect to database
 	database, err := db.ConnectDB()
@@ -214,7 +216,8 @@ func allTickets(w http.ResponseWriter, r *http.Request) {
 	}
 	defer database.Close()
 
-	tickets, err := database.GetAllTickets()
+	tickets := database.GetAllTickets(r.URL.Query()["user"])
+
 	j, err := json.Marshal(tickets)
 	w.Write([]byte(j))
 }

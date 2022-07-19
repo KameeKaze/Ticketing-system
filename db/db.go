@@ -123,19 +123,45 @@ func (h *Database) DeleteCookie(cookie string) error {
  	return err
 }
 
-func (h *Database) GetAllTickets() (tickets []*types.Ticket, err error){
-	rows, err := h.db.Query("SELECT id, title, status, content, issuer, date FROM tickets")
-	if err != nil {
+func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket){
+	if len(users) == 0 {
+		rows, err := h.db.Query("SELECT id, title, status, content, issuer, date FROM tickets")
+		if err != nil{
+			return 
+		}
+		for rows.Next() {
+			ticket := &types.Ticket{}
+			var date   int64
+			var issuer string
+			rows.Scan(&ticket.Id, &ticket.Title, &ticket.Status, &ticket.Content, &issuer, &date)
+			ticket.Issuer = h.GetUser(issuer)
+			ticket.Date = time.Unix(date, 0)
+			tickets = append(tickets, ticket)
+		}
 		return
+	}else{
+
+		for _,user :=  range users{
+			user = h.GetUserId(user)
+			if user == ""{
+				continue
+			}
+			rows, err := h.db.Query("SELECT id, title, status, content, issuer, date FROM tickets WHERE issuer = ?",user)
+			if err != nil{
+				return 
+			}
+			for rows.Next() {
+				ticket := &types.Ticket{}
+				var date   int64
+				var issuer string
+				rows.Scan(&ticket.Id, &ticket.Title, &ticket.Status, &ticket.Content, &issuer, &date)
+				ticket.Issuer = h.GetUser(issuer)
+				ticket.Date = time.Unix(date, 0)
+				tickets = append(tickets, ticket)
+			}
+
+		}
+		return
+
 	}
-	for rows.Next() {
-		ticket := &types.Ticket{}
-		var date   int64
-		var issuer string
-		rows.Scan(&ticket.Id, &ticket.Title, &ticket.Status, &ticket.Content, &issuer, &date)
-		ticket.Issuer = h.GetUser(issuer)
-		ticket.Date = time.Unix(date, 0)
-		tickets = append(tickets, ticket)
-	}
-	return
 }
