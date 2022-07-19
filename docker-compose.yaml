@@ -1,4 +1,5 @@
-version: '3.8'
+version: '3.9'
+
 services:
     mysql:
         container_name: database
@@ -12,6 +13,17 @@ services:
         # DEBUG
         ports:
             - "3306:3306"
+    website:
+        container_name: Ticketing-system
+        build: .
+        restart: unless-stopped
+        ports:
+            - ${PORT}:3000
+        environment:
+            DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+        volumes:
+            - ./errors.log:/errors.log
+
 volumes:
   data:
     driver: local
