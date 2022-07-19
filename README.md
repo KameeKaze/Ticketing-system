@@ -36,3 +36,5 @@ Cookie: session=<sessionid>
     "content":"Lorem Ipsum"
 }
 ```
+
+**GET** `/tickets?user=<user1>&user=<user2>`
