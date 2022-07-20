@@ -37,4 +37,6 @@ Cookie: session=<sessionid>
 }
 ```
 
-**GET** `/tickets?user=<user1>&user=<user2>`
+**GET** `/tickets?user={user1}&user={user2}`
+
+**DELETE** `/tickets/{ticketid}`
