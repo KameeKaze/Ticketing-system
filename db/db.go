@@ -38,7 +38,7 @@ func (h *Database) Close() {
 }
 
 // validate password for login
-func (h *Database) CheckPassword(username, password string) bool {
+func (h *Database) CheckPassword(username, password string) (bool) {
 	//get hashed password for compare
 	var passwordHash string
 	h.db.QueryRow("SELECT password FROM users WHERE name = ?", username).Scan(&passwordHash)
@@ -62,16 +62,16 @@ func (h *Database) AddUser(user *types.Register) error {
 }
 
 
-func (h *Database) AddTicket(ticket *types.CreateTicket) error {
+func (h *Database) AddTicket(ticket *types.CreateTicket) (bool, error) {
 	// get uuid of issue creator
 	err := h.db.QueryRow("SELECT id FROM users WHERE name = ?", ticket.Issuer).Scan(&ticket.Issuer)
 	if err != nil{
-		return err
+		return false, nil
 	}
 	// insert new ticket into database
 	_, err = h.db.Exec("INSERT INTO tickets (id, issuer, date, title, status, content) VALUES (UUID(), ?, ?, ?, 0, ?)",
 											 ticket.Issuer, time.Now().Local().Unix(), ticket.Title, ticket.Content)
-	return err
+	return true, err
 }
 
 func (h *Database) GetUserId(username string) (userId string) {
@@ -98,16 +98,16 @@ func (h *Database) UpdateCookie(userId, cookie string, expires *time.Time) error
 	return err
 }
 
-func (h *Database) SessionExist(cookie string) bool{
+func (h *Database) SessionExist(cookie string) (bool){
 	var expires int64
 	h.db.QueryRow("SELECT expires FROM sessions WHERE cookie = ?", cookie).Scan(&expires)
 	return expires != 0
 }
 
-func (h *Database) UserHasSession(userId string) bool{
+func (h *Database) UserHasSession(userId string) (bool, error){
 	var expires int64
-	h.db.QueryRow("SELECT expires FROM sessions WHERE userid = ?", userId).Scan(&expires)
-	return expires != 0
+	err := h.db.QueryRow("SELECT expires FROM sessions WHERE userid = ?", userId).Scan(&expires)
+	return expires != 0, err
 }
 
 func (h *Database) DeleteCookie(cookie string) error {
@@ -120,33 +120,31 @@ func (h *Database) DeleteTicket(ticketId string) error {
  	return err
 }
 
-func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket){
+func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err error){
+	var rows *sql.Rows
+	//user not spepcified - get all tickets
 	if len(users) == 0 {
-		rows, err := h.db.Query("SELECT id, title, status, content, issuer, date FROM tickets")
+		rows, err = h.db.Query("SELECT * FROM tickets")
 		if err != nil{
-			return 
+			return
 		}
 		for rows.Next() {
 			ticket := &types.Ticket{}
 			var date   int64
 			var issuer string
-			rows.Scan(&ticket.Id, &ticket.Title, &ticket.Status, &ticket.Content, &issuer, &date)
+			rows.Scan(&ticket.Id, &issuer, &date, &ticket.Title, &ticket.Status, &ticket.Content)
 			ticket.Issuer = h.GetUser(issuer)
 			ticket.Date = time.Unix(date, 0)
 			tickets = append(tickets, ticket)
 		}
-		return
+	//iterate over given users
 	}else{
-
 		for _,user :=  range users{
 			user = h.GetUserId(user)
 			if user == ""{
 				continue
 			}
-			rows, err := h.db.Query("SELECT id, title, status, content, issuer, date FROM tickets WHERE issuer = ?",user)
-			if err != nil{
-				return 
-			}
+			rows, err = h.db.Query("SELECT id, title, status, content, issuer, date FROM tickets WHERE issuer = ?",user)
 			for rows.Next() {
 				ticket := &types.Ticket{}
 				var date   int64
@@ -156,9 +154,7 @@ func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket){
 				ticket.Date = time.Unix(date, 0)
 				tickets = append(tickets, ticket)
 			}
-
 		}
-		return
-
 	}
+	return
 }

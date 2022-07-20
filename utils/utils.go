@@ -7,8 +7,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"os"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 
 	"github.com/KameeKaze/Ticketing-system/types"
 )
@@ -71,3 +73,14 @@ func CreateHttpResponse(w http.ResponseWriter, statusCode int, text string) {
 	w.Write([]byte(r))
 }
 
+func GenerateSessionCookie() *http.Cookie {
+	// generate http cookie
+	cookie := &http.Cookie{
+		Name:     "session",
+		Value:    uuid.New().String(),
+		HttpOnly: true,
+		Expires:  time.Now().Local().Add(time.Hour * time.Duration(2)),
+		Path:     "/",
+	}
+	return cookie
+}
