@@ -110,22 +110,13 @@ func (h *Database) UserHasSession(userId string) bool{
 	return expires != 0
 }
 
-func (h *Database) ValidateUserSession(cookie, userId string) bool{
-	var dbCookie string
-	var expires int64
-	h.db.QueryRow("SELECT cookie, expires FROM sessions WHERE userid = ?", userId).
-		Scan(&dbCookie, &expires)
-	return cookie == dbCookie
-}
-
-func (h *Database) ValidateSession(cookie string) bool{
-	var expires int64
-	h.db.QueryRow("SELECT expires FROM sessions WHERE cookie = ?", cookie).Scan(&expires)
-	return expires > time.Now().Local().Unix()
-}
-
 func (h *Database) DeleteCookie(cookie string) error {
 	_, err := h.db.Exec("DELETE FROM sessions WHERE cookie = ?", cookie)	
+ 	return err
+}
+
+func (h *Database) DeleteTicket(ticketId string) error {
+	_, err := h.db.Exec("DELETE FROM tickets WHERE id = ?", ticketId)	
  	return err
 }
 

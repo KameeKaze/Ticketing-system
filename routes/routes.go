@@ -28,6 +28,7 @@ func RoutesHandler() {
 	r.Post("/login", login)
 	r.Post("/register", register)
 	r.Post("/tickets/create", createTicket)
+	r.Delete("/tickets/{id}", deleteTicket)
 	r.Delete("/logout", logout)
 	r.Get("/tickets", allTickets)
 
@@ -168,6 +169,27 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func deleteTicket(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	//connect to database
+	database, err := db.ConnectDB()
+	if err != nil {
+		utils.Logger.Error(err.Error())
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
+	}
+	defer database.Close()
+	ticketId := chi.URLParam(r, "id")
+	if err := database.DeleteTicket(ticketId); err != nil{
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "Database error")
+		return
+	}else{
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "Successfuly deleted ticket '"+ticketId+"'")
+		fmt.Println(err)
+		return
+	}
+}
+
 
 func createTicket(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
