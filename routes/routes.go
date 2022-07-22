@@ -19,9 +19,9 @@ func RoutesHandler() {
 	r.Use(middleware.Logger)
 
 	//routes
-	r.Get("/", home)
+	r.Get("/", Home)
 	r.Post("/login", login)
-	r.Post("/register", register)
+	r.Post("/register", Register)
 	r.Post("/tickets/create", createTicket)
 	r.Delete("/tickets/{id}", deleteTicket)
 	r.Delete("/logout", logout)
@@ -32,6 +32,6 @@ func RoutesHandler() {
 	http.ListenAndServe(PORT, r)
 }
 
-func home(w http.ResponseWriter, r *http.Request) {
+func Home(w http.ResponseWriter, r *http.Request) {
 	utils.CreateHttpResponse(w, http.StatusOK, "Ticketing system")
 }
