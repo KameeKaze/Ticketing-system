@@ -60,7 +60,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func logout(w http.ResponseWriter, r *http.Request) {
+func Logout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	//connect to database
@@ -132,4 +132,42 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+}
+
+func ChangePassword(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	//connect to database
+	database, err := db.ConnectDB()
+	if err != nil {
+		utils.Logger.Error(err.Error())
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
+		return
+	}
+	defer database.Close()
+
+	//decode body data
+	data := &types.ChangePassword{}
+	json.NewDecoder(r.Body).Decode(&data)
+
+	// check if request was valid
+	if utils.ValidateJSON(data) {
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "Invalid request")
+		return
+	}
+
+	// comprare password and user password
+	if database.CheckPassword(data.Username, data.Password) {
+		if err := database.ChangePassword(data.Username, data.NewPassword); err != nil{
+			utils.Logger.Error(err.Error())
+			utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+			return
+		}else{
+			utils.CreateHttpResponse(w, http.StatusNoContent, "Password successfuly updated")
+			return
+		}
+
+	} else {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid credentials")
+		return
+	}
 }

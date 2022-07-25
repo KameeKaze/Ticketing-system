@@ -158,3 +158,9 @@ func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err e
 	}
 	return
 }
+
+func (h *Database) ChangePassword(username, password string) error {
+	_, err := h.db.Exec("UPDATE users SET password = ? WHERE name = ?",
+								utils.HashPassword(password), username)	
+	return err
+}

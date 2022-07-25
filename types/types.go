@@ -25,6 +25,12 @@ type Login struct{
 	Password string `json:"password" validate:"required"`
 }
 
+type ChangePassword struct{
+	Username    string `json:"username" validate:"required"`
+	Password    string `json:"password" validate:"required"`
+	NewPassword string `json:"newpassword" validate:"required"`
+}
+
 type Register struct{
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
