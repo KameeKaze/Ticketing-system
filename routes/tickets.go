@@ -11,7 +11,7 @@ import (
 	"github.com/KameeKaze/Ticketing-system/utils"
 )
 
-func deleteTicket(w http.ResponseWriter, r *http.Request) {
+func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	//connect to database
 	database, err := db.ConnectDB()
@@ -33,7 +33,7 @@ func deleteTicket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func createTicket(w http.ResponseWriter, r *http.Request) {
+func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	//connect to database
 	database, err := db.ConnectDB()
@@ -67,7 +67,7 @@ func createTicket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func allTickets(w http.ResponseWriter, r *http.Request) {
+func AllTickets(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	//query user parameter
 

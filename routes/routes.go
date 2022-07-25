@@ -23,10 +23,10 @@ func RoutesHandler() {
 	r.Post("/login", Login)
 	r.Post("/register", SignUp)
 	r.Post("/changepassword", ChangePassword)
-	r.Post("/tickets/create", createTicket)
-	r.Delete("/tickets/{id}", deleteTicket)
+	r.Post("/tickets/create", CreateTicket)
+	r.Delete("/tickets/{id}", DeleteTicket)
 	r.Delete("/logout", Logout)
-	r.Get("/tickets", allTickets)
+	r.Get("/tickets", AllTickets)
 
 	//start
 	fmt.Println("Running on http://127.0.0.1" + PORT)

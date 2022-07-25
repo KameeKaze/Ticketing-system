@@ -21,13 +21,24 @@
 }
 ```
 
+**POST** `/changepassword`
+
+```
+{
+    "username":"John Doe",
+    "password":"secretpassword123"
+    "newpassword":"password345"
+}
+```
+
+
 **DELETE** `/logout`
 
 ```
 Cookie: session=<sessionid>
 ```
 
-**POST** `/tickets/create`
+**PUT** `/tickets/create`
 
 ```
 {
