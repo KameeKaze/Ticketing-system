@@ -9,7 +9,7 @@ import (
 	"github.com/KameeKaze/Ticketing-system/utils"
 )
 
-func login(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	//connect to database
@@ -39,11 +39,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		userId := database.GetUserId(loginData.Username)
 
 		// update or create session based on user already has a session
-		if hasCookie, err := database.UserHasSession(userId); err != nil {
-			//check database error
-			utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
-			utils.Logger.Error(err.Error())
-		} else if hasCookie {
+		if database.UserHasSession(userId) {
 			err = database.UpdateCookie(userId, cookie.Value, &cookie.Expires)
 		} else {
 			err = database.SaveCookie(userId, cookie.Value, &cookie.Expires)
@@ -55,7 +51,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			http.SetCookie(w, cookie)
-			utils.CreateHttpResponse(w, http.StatusOK, "Logging in")
+			utils.CreateHttpResponse(w, http.StatusOK, "Logging in "+loginData.Username)
 		}
 
 	} else {
@@ -99,7 +95,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Register(w http.ResponseWriter, r *http.Request) {
+func SignUp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	//connect to database

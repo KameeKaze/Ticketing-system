@@ -20,8 +20,8 @@ func RoutesHandler() {
 
 	//routes
 	r.Get("/", Home)
-	r.Post("/login", login)
-	r.Post("/register", Register)
+	r.Post("/login", Login)
+	r.Post("/register", SignUp)
 	r.Post("/tickets/create", createTicket)
 	r.Delete("/tickets/{id}", deleteTicket)
 	r.Delete("/logout", logout)

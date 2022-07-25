@@ -104,10 +104,10 @@ func (h *Database) SessionExist(cookie string) (bool){
 	return expires != 0
 }
 
-func (h *Database) UserHasSession(userId string) (bool, error){
+func (h *Database) UserHasSession(userId string) (bool){
 	var expires int64
-	err := h.db.QueryRow("SELECT expires FROM sessions WHERE userid = ?", userId).Scan(&expires)
-	return expires != 0, err
+	h.db.QueryRow("SELECT expires FROM sessions WHERE userid = ?", userId).Scan(&expires)
+	return expires != 0
 }
 
 func (h *Database) DeleteCookie(cookie string) error {
