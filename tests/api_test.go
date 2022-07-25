@@ -21,14 +21,14 @@ func init() {
 
 	// Generating Random string
 	for i := 0; i < 12; i++ {
-		ran_str[i] = byte(40 + rand.Intn(83))
+		ran_str[i] = byte(40 + rand.Intn(82))
 	}
 
 	//create random username for test
 	USERNAME = string(ran_str)
 
 	for i := 0; i < 12; i++ {
-		ran_str[i] = byte(40 + rand.Intn(83))
+		ran_str[i] = byte(40 + rand.Intn(82))
 	}
 	USERNAME2 = string(ran_str)
 
@@ -97,6 +97,60 @@ func TestSignUp(t *testing.T) {
 		Post("/register").JSON(``).
 		Expect(t).
 		Body(`{"Message": "Invalid request"}`).
+		Status(http.StatusBadRequest).
+		End()
+}
+
+func TestLogin(t *testing.T) {
+	// login existring user
+	apitest.New().
+		HandlerFunc(routes.Login).
+		Post("/login").JSON(fmt.Sprintf(
+			`{
+				"username":"%s",
+				"password":"secretpassword123"
+			}`,USERNAME)).
+		Expect(t).
+		Body(fmt.Sprintf(
+			`{"Message": "Logging in %s"}`,USERNAME)).
+		Status(http.StatusOK).
+		End()
+
+	// login non existring user
+	apitest.New().
+		HandlerFunc(routes.Login).
+		Post("/login").JSON(fmt.Sprintf(
+			`{
+				"username":"%s",
+				"password":"secretpassword123"
+			}`,USERNAME2)).
+		Expect(t).
+		Body(fmt.Sprintf(
+			`{"Message": "Invalid credentials"}`)).
+		Status(http.StatusUnauthorized).
+		End()
+	// empty body
+	apitest.New().
+		HandlerFunc(routes.Login).
+		Post("/login").JSON(fmt.Sprintf(
+			``)).
+		Expect(t).
+		Body(fmt.Sprintf(
+			`{"Message": "Invalid request"}`)).
+		Status(http.StatusBadRequest).
+		End()
+
+	// invalid post data
+	apitest.New().
+		HandlerFunc(routes.Login).
+		Post("/login").JSON(fmt.Sprintf(
+			`{
+				"s":"dsa",
+				"username":"",
+			}`)).
+		Expect(t).
+		Body(fmt.Sprintf(
+			`{"Message": "Invalid request"}`)).
 		Status(http.StatusBadRequest).
 		End()
 }
