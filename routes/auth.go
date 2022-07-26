@@ -107,6 +107,16 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 	defer database.Close()
 
+	cookie, err := r.Cookie("session")
+	// no sesion cookie set
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Login as admin to create user")
+		return
+	}
+	if !database.CookieAuthorized(cookie.Value){
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Only admins can create users")
+		return
+	}
 	//decode body data
 	registerData := &types.Register{}
 	json.NewDecoder(r.Body).Decode(&registerData)

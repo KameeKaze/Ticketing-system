@@ -110,6 +110,17 @@ func (h *Database) UserHasSession(userId string) (bool){
 	return expires != 0
 }
 
+func (h *Database) CookieAuthorized(cookie string) (bool){
+	if !h.SessionExist(cookie){
+		return false
+	}
+	var user types.User
+	h.db.QueryRow("SELECT userid FROM sessions WHERE cookie = ?", cookie).Scan(&user.Id)
+	user = h.GetUser(user.Id)
+	return user.Role == "admin"
+}
+
+
 func (h *Database) DeleteCookie(cookie string) error {
 	_, err := h.db.Exec("DELETE FROM sessions WHERE cookie = ?", cookie)	
  	return err
