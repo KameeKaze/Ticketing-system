@@ -39,10 +39,11 @@ Cookie: session=<sessionid>
 ```
 
 **PUT** `/tickets/create`
-
+```
+Cookie: session=<sessionid>
+```
 ```
 {
-    "issuer":"John Doe",
     "title":"This is a ticket",
     "content":"Lorem Ipsum"
 }

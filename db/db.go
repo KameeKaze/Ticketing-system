@@ -63,13 +63,8 @@ func (h *Database) AddUser(user *types.Register) error {
 
 
 func (h *Database) AddTicket(ticket *types.CreateTicket) (bool, error) {
-	// get uuid of issue creator
-	err := h.db.QueryRow("SELECT id FROM users WHERE name = ?", ticket.Issuer).Scan(&ticket.Issuer)
-	if err != nil{
-		return false, nil
-	}
 	// insert new ticket into database
-	_, err = h.db.Exec("INSERT INTO tickets (id, issuer, date, title, status, content) VALUES (UUID(), ?, ?, ?, 0, ?)",
+	_, err := h.db.Exec("INSERT INTO tickets (id, issuer, date, title, status, content) VALUES (UUID(), ?, ?, ?, 0, ?)",
 											 ticket.Issuer, time.Now().Local().Unix(), ticket.Title, ticket.Content)
 	return true, err
 }
@@ -108,6 +103,12 @@ func (h *Database) UserHasSession(userId string) (bool){
 	var expires int64
 	h.db.QueryRow("SELECT expires FROM sessions WHERE userid = ?", userId).Scan(&expires)
 	return expires != 0
+}
+
+
+func (h *Database) CookieUserId(cookie string) (userId string){
+	h.db.QueryRow("SELECT userid FROM sessions WHERE cookie = ?", cookie).Scan(&userId)
+	return 
 }
 
 func (h *Database) CookieAuthorized(cookie string) (bool){

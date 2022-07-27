@@ -11,6 +11,7 @@ import (
 	"github.com/KameeKaze/Ticketing-system/utils"
 )
 
+
 func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	//connect to database
@@ -43,6 +44,8 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer database.Close()
 
+
+
 	//decode body data
 	data := &types.CreateTicket{}
 	json.NewDecoder(r.Body).Decode(&data)
@@ -52,6 +55,14 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "Invalid request")
 		return
 	}
+
+	cookie, err := r.Cookie("session")
+	// no sesion cookie set
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
+		return
+	}
+	data.Issuer = database.CookieUserId(cookie.Value)
 
 	// create ticket
 	if added, err := database.AddTicket(data); err != nil {

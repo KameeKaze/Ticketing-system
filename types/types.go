@@ -38,7 +38,7 @@ type Register struct{
 }
 
 type CreateTicket struct{
-	Issuer  string `json:"issuer"  validate:"required"`
+	Issuer  string `json:"issuer"`
 	Title   string `json:"title"   validate:"required"`
 	Content string `json:"content" validate:"required"`
 }
