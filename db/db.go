@@ -176,3 +176,8 @@ func (h *Database) ChangePassword(username, password string) error {
 								utils.HashPassword(password), username)	
 	return err
 }
+
+func (h *Database) GetTicketIssuer(ticketId string) (userId string, err error){
+	err = h.db.QueryRow("SELECT issuer FROM tickets WHERE id = ?", ticketId).Scan(&userId)
+	return
+}

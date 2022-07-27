@@ -22,7 +22,26 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer database.Close()
 
+	cookie, err := r.Cookie("session")
+	// no sesion cookie set
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
+		return
+	}
+	userId := database.CookieUserId(cookie.Value)
+	if userId == ""{
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	}
 	ticketId := chi.URLParam(r, "id")
+
+	if id, err := database.GetTicketIssuer(ticketId); err != nil {
+		utils.CreateHttpResponse(w, http.StatusNotFound, "Ticket with id does not exit")
+		return
+	}else if id != userId{
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "You can't delete this ticket")
+		return
+	}
 	// delete ticket in database
 	if err := database.DeleteTicket(ticketId); err != nil {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "Database error")
@@ -43,9 +62,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
 	}
 	defer database.Close()
-
-
-
+ 
 	//decode body data
 	data := &types.CreateTicket{}
 	json.NewDecoder(r.Body).Decode(&data)
@@ -63,6 +80,10 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data.Issuer = database.CookieUserId(cookie.Value)
+	if data.Issuer == ""{
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	}
 
 	// create ticket
 	if added, err := database.AddTicket(data); err != nil {
