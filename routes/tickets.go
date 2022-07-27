@@ -28,8 +28,13 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
 		return
 	}
-	userId := database.CookieUserId(cookie.Value)
-	if userId == ""{
+	sessionCookie,err  := database.GetSessionCookie(cookie.Value)
+	if err != nil{
+		utils.Logger.Error(err.Error())
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		return
+	}
+	if sessionCookie.UserId == ""{
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
 	}
@@ -38,7 +43,7 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 	if id, err := database.GetTicketIssuer(ticketId); err != nil {
 		utils.CreateHttpResponse(w, http.StatusNotFound, "Ticket with id does not exit")
 		return
-	}else if id != userId{
+	}else if id != sessionCookie.UserId{
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "You can't delete this ticket")
 		return
 	}
@@ -79,7 +84,13 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
 		return
 	}
-	data.Issuer = database.CookieUserId(cookie.Value)
+	sessionCookie,err  := database.GetSessionCookie(cookie.Value)
+	if err != nil{
+		utils.Logger.Error(err.Error())
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		return
+	}
+	data.Issuer = sessionCookie.UserId
 	if data.Issuer == ""{
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return

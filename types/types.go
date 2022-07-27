@@ -7,6 +7,7 @@ import(
 type User struct{
 	Id       string `json:"id"`
 	Name     string `json:"username" validate:"required"`
+	Password string
 	Role     string `json:"role"`
 }
 
@@ -19,6 +20,11 @@ type Ticket struct{
 	Content string    `json:"content"`
 }
 
+type SessionCookie struct{
+	UserId     string
+    Cookie     string
+    Expires    int64     
+}
 
 type Login struct{
 	Username string `json:"username" validate:"required"`

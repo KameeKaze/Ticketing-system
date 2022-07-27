@@ -32,7 +32,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// comprare password and user password
-	if database.CheckPassword(loginData.Username, loginData.Password) {
+	user, err := database.GetUser(database.GetUserId(loginData.Username))
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
+		return
+	}
+	if utils.ComparePassword(user.Password, loginData.Password) {
 		//generate cookie
 		cookie := utils.GenerateSessionCookie()
 		//get userId
@@ -80,7 +86,13 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check if session exist
-	if !(database.SessionExist(cookie.Value)) {
+	sessionCookie,err  := database.GetSessionCookie(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
+		return
+	}
+	if sessionCookie.Cookie != cookie.Value {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
 	} else {
@@ -113,7 +125,19 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Login as admin to create user")
 		return
 	}
-	if !database.CookieAuthorized(cookie.Value){
+	sessionCookie,err := database.GetSessionCookie(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
+		return
+	}
+	user,err := database.GetUser(sessionCookie.UserId)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
+		return
+	}
+	if user.Role != "admin" {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Only admins can create users")
 		return
 	}
@@ -127,7 +151,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check if user exist
-	if database.CheckUserExist(registerData.Username) {
+	if database.GetUserId(registerData.Username) != "" {
 		utils.CreateHttpResponse(w, http.StatusConflict, "Username already taken")
 		return
 	} else {
@@ -166,7 +190,13 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// comprare password and user password
-	if database.CheckPassword(data.Username, data.Password) {
+	user, err := database.GetUser(database.GetUserId(data.Username))
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
+		return
+	}
+	if utils.ComparePassword(user.Password, data.Password) {
 		if err := database.ChangePassword(data.Username, data.NewPassword); err != nil{
 			utils.Logger.Error(err.Error())
 			utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
