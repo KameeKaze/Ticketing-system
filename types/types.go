@@ -23,7 +23,7 @@ type Ticket struct{
 type SessionCookie struct{
 	UserId     string
     Cookie     string
-    Expires    int64     
+    Expires    time.Time     
 }
 
 type Login struct{

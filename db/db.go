@@ -19,7 +19,7 @@ func ConnectDB() (*Database, error) {
 		dbUser := "root"
 		dbPass := "password"
 		dbName := "ticketing_system"
-		return sql.Open("mysql", dbUser+":"+dbPass+"@(127.0.0.1:3306)/"+dbName)
+		return sql.Open("mysql", dbUser+":"+dbPass+"@(127.0.0.1:3306)/"+dbName+"?parseTime=true")
 	}()
 
 	//create db stuct
@@ -55,7 +55,7 @@ func (h *Database) ChangePassword(username, password string) error {
 func (h *Database) AddTicket(ticket *types.CreateTicket) (bool, error) {
 	// insert new ticket into database
 	_, err := h.db.Exec("INSERT INTO tickets (id, issuer, date, title, status, content) VALUES (UUID(), ?, ?, ?, 0, ?)",
-											 ticket.Issuer, time.Now().Local().Unix(), ticket.Title, ticket.Content)
+											 ticket.Issuer, time.Now().Format(time.RFC3339), ticket.Title, ticket.Content)
 	return true, err
 }
 
@@ -68,14 +68,14 @@ func (h *Database) DeleteTicket(ticketId string) error {
 //save session cookie
 func (h *Database) SaveCookie(userId, cookie string, expires *time.Time) error {
 	_, err := h.db.Exec("INSERT INTO sessions (userid, cookie, expires) VALUES (?, ?, ?)",
-									userId, cookie, expires.Unix())	
+									userId, cookie, expires)
 	return err
 }
 
 //update session cookie expiration date
 func (h *Database) UpdateCookie(userId, cookie string, expires *time.Time) error {
 	_, err := h.db.Exec("UPDATE sessions SET cookie = ?, expires = ? WHERE userid = ?",
-									cookie, expires.Unix(), userId)	
+									cookie, expires, userId)	
 	return err
 }
 
@@ -122,11 +122,9 @@ func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err e
 		}
 		for rows.Next() {
 			ticket := &types.Ticket{}
-			var date   int64
 			var issuer string
-			rows.Scan(&ticket.Id, &issuer, &date, &ticket.Title, &ticket.Status, &ticket.Content)
+			rows.Scan(&ticket.Id, &issuer, &ticket.Date, &ticket.Title, &ticket.Status, &ticket.Content)
 			//ticket.Issuer = h.GetUser(issuer)
-			ticket.Date = time.Unix(date, 0)
 			tickets = append(tickets, ticket)
 		}
 	//iterate over given users
@@ -139,11 +137,9 @@ func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err e
 			rows, err = h.db.Query("SELECT id, title, status, content, issuer, date FROM tickets WHERE issuer = ?",user)
 			for rows.Next() {
 				ticket := &types.Ticket{}
-				var date   int64
 				var issuer string
-				rows.Scan(&ticket.Id, &ticket.Title, &ticket.Status, &ticket.Content, &issuer, &date)
+				rows.Scan(&ticket.Id, &ticket.Title, &ticket.Status, &ticket.Content, &issuer, &ticket.Date)
 				//ticket.Issuer = h.GetUser(issuer)
-				ticket.Date = time.Unix(date, 0)
 				tickets = append(tickets, ticket)
 			}
 		}

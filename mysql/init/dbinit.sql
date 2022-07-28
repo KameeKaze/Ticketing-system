@@ -15,7 +15,7 @@ CREATE TABLE users (
 CREATE TABLE tickets (
     id       VARCHAR(36) NOT NULL PRIMARY KEY,
     issuer   VARCHAR(36) NOT NULL,
-    date     INT(11)     NOT NULL,
+    date     DATETIME     NOT NULL,
     title    TINYTEXT    NOT NULL,
     status   INT         NOT NULL,
     content  TEXT        NOT NULL,
@@ -25,6 +25,7 @@ CREATE TABLE tickets (
 CREATE TABLE sessions (
     userid     VARCHAR(36) NOT NULL,
     cookie     VARCHAR(36) NOT NULL,
-    expires    INT(11)     NOT NULL,
+    expires    DATETIME     NOT NULL,
     FOREIGN KEY (userid) REFERENCES users(id)
-)
+);
+
