@@ -13,6 +13,10 @@ type Database struct {
 	db *sql.DB
 }
 
+func init(){
+	go DeleteExpiredSessions()
+}
+
 func ConnectDB() (*Database, error) {
 	//connect to the database
 	db, _ := func() (*sql.DB, error) {
@@ -35,6 +39,20 @@ func ConnectDB() (*Database, error) {
 
 func (h *Database) Close() {
 	h.db.Close()
+}
+
+//delete session cookie
+func DeleteExpiredSessions() {
+	database, err := ConnectDB()
+	if err != nil {
+		utils.Logger.Error(err.Error())
+		return
+	}
+	defer database.Close()
+	for{
+		database.db.Exec("DELETE FROM sessions WHERE DATE(expires) > NOW();")
+		time.Sleep(time.Second*1)
+	}
 }
 
 //add user: [name, password, role] into database
@@ -85,6 +103,8 @@ func (h *Database) DeleteCookie(cookie string) error {
  	return err
 }
 
+
+
 // Get user by userId
 func (h *Database) GetUser(userId string) (user types.User, err error) {
 	err = h.db.QueryRow("SELECT * FROM users WHERE id = ?", userId).
@@ -107,9 +127,9 @@ func (h *Database) GetSessionCookie(sessionCookie string) (cookie types.SessionC
 }
 
 func (h *Database) UserHasSession(userId string) (bool){
-	var expires int64
-	h.db.QueryRow("SELECT expires FROM sessions WHERE userid = ?", userId).Scan(&expires)
-	return expires != 0
+	var cookie string
+	h.db.QueryRow("SELECT cookie FROM sessions WHERE userid = ?", userId).Scan(&cookie)
+	return cookie != ""
 }
 
 func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err error){
