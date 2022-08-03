@@ -133,3 +133,53 @@ func AllTickets(w http.ResponseWriter, r *http.Request) {
 	j, err := json.Marshal(tickets)
 	w.Write([]byte(j))
 }
+
+func UpdateTicket(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	//query user parameter
+
+	//connect to database
+	database, err := db.ConnectDB()
+	if err != nil {
+		utils.Logger.Error(err.Error())
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
+		return
+	}
+	defer database.Close()
+
+	cookie, err := r.Cookie("session")
+	// no sesion cookie set
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
+		return
+	}
+	sessionCookie,err := database.GetSessionCookie(cookie.Value)
+	if err != nil{
+		utils.Logger.Error(err.Error())
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		return
+	}
+	if sessionCookie.UserId == ""{
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	}
+
+	data := &types.CreateTicket{}
+	json.NewDecoder(r.Body).Decode(&data)
+
+	// check if request was valid
+	if utils.ValidateJSON(data) {
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "Invalid request")
+		return
+	}
+
+	err = database.UpdateTicket(chi.URLParam(r, "id"), data)
+	if err != nil{
+		utils.Logger.Error(err.Error())
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		return
+	}
+
+	utils.CreateHttpResponse(w, http.StatusNoContent, "")
+	return
+}

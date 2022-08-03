@@ -144,7 +144,7 @@ func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err e
 			ticket := &types.Ticket{}
 			var issuer string
 			rows.Scan(&ticket.Id, &issuer, &ticket.Date, &ticket.Title, &ticket.Status, &ticket.Content)
-			//ticket.Issuer = h.GetUser(issuer)
+			ticket.Issuer,_ = h.GetUser(issuer)
 			tickets = append(tickets, ticket)
 		}
 	//iterate over given users
@@ -154,12 +154,12 @@ func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err e
 			if user == ""{
 				continue
 			}
-			rows, err = h.db.Query("SELECT id, title, status, content, issuer, date FROM tickets WHERE issuer = ?",user)
+			rows, err = h.db.Query("SELECT * FROM tickets WHERE issuer = ?",user)
 			for rows.Next() {
 				ticket := &types.Ticket{}
 				var issuer string
-				rows.Scan(&ticket.Id, &ticket.Title, &ticket.Status, &ticket.Content, &issuer, &ticket.Date)
-				//ticket.Issuer = h.GetUser(issuer)
+				rows.Scan(&ticket.Id, &issuer, &ticket.Date, &ticket.Title, &ticket.Status, &ticket.Content)
+				ticket.Issuer,_ = h.GetUser(issuer)
 				tickets = append(tickets, ticket)
 			}
 		}
@@ -170,4 +170,18 @@ func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err e
 func (h *Database) GetTicketIssuer(ticketId string) (userId string, err error){
 	err = h.db.QueryRow("SELECT issuer FROM tickets WHERE id = ?", ticketId).Scan(&userId)
 	return
+}
+
+func (h *Database) GetTicket(ticketId string) (ticket types.Ticket, err error){
+	var issuer string
+	err = h.db.QueryRow("SELECT * FROM tickets WHERE id = ?", ticketId).
+				Scan(&ticket.Id, &issuer, &ticket.Date,&ticket.Title, &ticket.Status, &ticket.Content)
+	ticket.Issuer,_ = h.GetUser(issuer)
+	return
+}
+
+func (h *Database) UpdateTicket(id string, ticket *types.CreateTicket) error {
+	_, err := h.db.Exec("UPDATE tickets SET title = ?, content = ?  WHERE id = ?",
+								ticket.Title, ticket.Content, id)	
+	return err
 }

@@ -5,9 +5,9 @@ import(
 )
 
 type User struct{
-	Id       string `json:"id"`
+	Id       string `json:"-"`
 	Name     string `json:"username" validate:"required"`
-	Password string
+	Password string `json:"-"`
 	Role     string `json:"role"`
 }
 

@@ -125,7 +125,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Login as admin to create user")
 		return
 	}
-	sessionCookie,err := database.GetSessionCookie(cookie.Value)
+	sessionCookie, err := database.GetSessionCookie(cookie.Value)
 	if err != nil {
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
 		utils.Logger.Error(err.Error())
