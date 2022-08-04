@@ -1,8 +1,11 @@
 # Ticketing-system
 
 ## A simple open-source ticketing system written in go.
-
+----
 **POST** `/register`
+```
+Cookie: session=<sessionid>
+```
 
 ```
 {
@@ -11,7 +14,7 @@
     "role":"programmer"
 }
 ```
-
+----
 **POST** `/login`
 
 ```
@@ -20,8 +23,11 @@
     "password":"secretpassword123"
 }
 ```
-
+----
 **POST** `/changepassword`
+```
+Cookie: session=<sessionid>
+```
 
 ```
 {
@@ -30,14 +36,13 @@
     "newpassword":"password345"
 }
 ```
-
-
+----
 **DELETE** `/logout`
 
 ```
 Cookie: session=<sessionid>
 ```
-
+----
 **PUT** `/tickets/create`
 ```
 Cookie: session=<sessionid>
@@ -48,7 +53,11 @@ Cookie: session=<sessionid>
     "content":"Lorem Ipsum"
 }
 ```
-
+----
 **GET** `/tickets?user={user1}&user={user2}`
 
+----
 **DELETE** `/tickets/{ticketid}`
+```
+Cookie: session=<sessionid>
+```
