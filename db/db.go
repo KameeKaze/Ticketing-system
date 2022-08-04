@@ -120,8 +120,8 @@ func (h *Database) GetUserId(username string) (userId string) {
 }
 
 // get session cookie
-func (h *Database) GetSessionCookie(sessionCookie string) (cookie types.SessionCookie, err error){
-	err = h.db.QueryRow("SELECT * FROM sessions WHERE cookie = ?", sessionCookie).
+func (h *Database) GetSessionCookie(sessionCookie string) (cookie types.SessionCookie){
+	h.db.QueryRow("SELECT * FROM sessions WHERE cookie = ?", sessionCookie).
 			Scan(&cookie.UserId, &cookie.Cookie, &cookie.Expires)
 	return 
 }

@@ -28,13 +28,8 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
 		return
 	}
-	sessionCookie,err  := database.GetSessionCookie(cookie.Value)
-	if err != nil{
-		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
-		return
-	}
-	if sessionCookie.UserId == ""{
+	sessionCookie := database.GetSessionCookie(cookie.Value)
+	if sessionCookie.Cookie != cookie.Value{
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
 	}
@@ -84,12 +79,12 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
 		return
 	}
-	sessionCookie,err  := database.GetSessionCookie(cookie.Value)
-	if err != nil{
-		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+	sessionCookie := database.GetSessionCookie(cookie.Value)
+	if sessionCookie.Cookie != cookie.Value{
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
 	}
+
 	data.Issuer = sessionCookie.UserId
 	if data.Issuer == ""{
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
@@ -123,6 +118,18 @@ func AllTickets(w http.ResponseWriter, r *http.Request) {
 	}
 	defer database.Close()
 
+	cookie, err := r.Cookie("session")
+	// no sesion cookie set
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
+		return
+	}
+	sessionCookie := database.GetSessionCookie(cookie.Value)
+	if sessionCookie.Cookie != cookie.Value{
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	}
+
 	tickets, err := database.GetAllTickets(r.URL.Query()["user"])
 	if err != nil {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "Database error")
@@ -153,13 +160,8 @@ func UpdateTicket(w http.ResponseWriter, r *http.Request){
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
 		return
 	}
-	sessionCookie,err := database.GetSessionCookie(cookie.Value)
-	if err != nil{
-		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
-		return
-	}
-	if sessionCookie.UserId == ""{
+	sessionCookie := database.GetSessionCookie(cookie.Value)
+	if sessionCookie.Cookie != cookie.Value{
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
 	}

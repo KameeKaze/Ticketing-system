@@ -86,12 +86,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check if session exist
-	sessionCookie,err  := database.GetSessionCookie(cookie.Value)
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
-		utils.Logger.Error(err.Error())
-		return
-	}
+	sessionCookie := database.GetSessionCookie(cookie.Value)
 	if sessionCookie.Cookie != cookie.Value {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
@@ -125,10 +120,9 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Login as admin to create user")
 		return
 	}
-	sessionCookie, err := database.GetSessionCookie(cookie.Value)
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
-		utils.Logger.Error(err.Error())
+	sessionCookie := database.GetSessionCookie(cookie.Value)
+	if sessionCookie.Cookie != cookie.Value {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
 	}
 	user,err := database.GetUser(sessionCookie.UserId)
@@ -179,6 +173,18 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 	defer database.Close()
 
+	cookie, err := r.Cookie("session")
+	// no sesion cookie set
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "No sesion cookie specified")
+		return
+	}
+	sessionCookie := database.GetSessionCookie(cookie.Value)
+	if sessionCookie.Cookie != cookie.Value {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	}
+
 	//decode body data
 	data := &types.ChangePassword{}
 	json.NewDecoder(r.Body).Decode(&data)
@@ -186,6 +192,11 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	// check if request was valid
 	if utils.ValidateJSON(data) {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "Invalid request")
+		return
+	}
+
+	if sessionCookie.UserId != database.GetUserId(data.Username) {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
 	}
 
