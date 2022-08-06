@@ -1,8 +1,9 @@
 package db
 
-import(
+import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
+	"os"
 	"time"
 
 	"github.com/KameeKaze/Ticketing-system/types"
@@ -13,7 +14,7 @@ type Database struct {
 	db *sql.DB
 }
 
-func init(){
+func init() {
 	go DeleteExpiredSessions()
 }
 
@@ -21,16 +22,17 @@ func ConnectDB() (*Database, error) {
 	//connect to the database
 	db, _ := func() (*sql.DB, error) {
 		dbUser := "root"
-		dbPass := "password"
+		dbPass := os.Getenv("DATABASE_PASSWORD")
 		dbName := "ticketing_system"
-		return sql.Open("mysql", dbUser+":"+dbPass+"@(127.0.0.1:3306)/"+dbName+"?parseTime=true")
+		dbHost := "127.0.0.1:3306"
+		return sql.Open("mysql", dbUser+":"+dbPass+"@("+dbHost+")/"+dbName+"?parseTime=true")
 	}()
 
 	//create db stuct
 	DbHandler := &Database{
 		db: db,
 	}
-		
+
 	//return error if can't ping database
 	err := DbHandler.db.Ping()
 
@@ -49,9 +51,9 @@ func DeleteExpiredSessions() {
 		return
 	}
 	defer database.Close()
-	for{
+	for {
 		database.db.Exec("DELETE FROM sessions WHERE DATE(expires) > NOW();")
-		time.Sleep(time.Second*1)
+		time.Sleep(time.Second * 1)
 	}
 }
 
@@ -65,7 +67,7 @@ func (h *Database) AddUser(user *types.Register) error {
 //change password of a given user
 func (h *Database) ChangePassword(username, password string) error {
 	_, err := h.db.Exec("UPDATE users SET password = ? WHERE name = ?",
-								utils.HashPassword(password), username)	
+		utils.HashPassword(password), username)
 	return err
 }
 
@@ -73,43 +75,41 @@ func (h *Database) ChangePassword(username, password string) error {
 func (h *Database) AddTicket(ticket *types.CreateTicket) (bool, error) {
 	// insert new ticket into database
 	_, err := h.db.Exec("INSERT INTO tickets (id, issuer, date, title, status, content) VALUES (UUID(), ?, ?, ?, 0, ?)",
-											 ticket.Issuer, time.Now().Format(time.RFC3339), ticket.Title, ticket.Content)
+		ticket.Issuer, time.Now().Format(time.RFC3339), ticket.Title, ticket.Content)
 	return true, err
 }
 
 // delete a ticket
 func (h *Database) DeleteTicket(ticketId string) error {
-	_, err := h.db.Exec("DELETE FROM tickets WHERE id = ?", ticketId)	
- 	return err
+	_, err := h.db.Exec("DELETE FROM tickets WHERE id = ?", ticketId)
+	return err
 }
 
 //save session cookie
 func (h *Database) SaveCookie(userId, cookie string, expires *time.Time) error {
 	_, err := h.db.Exec("INSERT INTO sessions (userid, cookie, expires) VALUES (?, ?, ?)",
-									userId, cookie, expires)
+		userId, cookie, expires)
 	return err
 }
 
 //update session cookie expiration date
 func (h *Database) UpdateCookie(userId, cookie string, expires *time.Time) error {
 	_, err := h.db.Exec("UPDATE sessions SET cookie = ?, expires = ? WHERE userid = ?",
-									cookie, expires, userId)	
+		cookie, expires, userId)
 	return err
 }
 
 //delete session cookie
 func (h *Database) DeleteCookie(cookie string) error {
-	_, err := h.db.Exec("DELETE FROM sessions WHERE cookie = ?", cookie)	
- 	return err
+	_, err := h.db.Exec("DELETE FROM sessions WHERE cookie = ?", cookie)
+	return err
 }
-
-
 
 // Get user by userId
 func (h *Database) GetUser(userId string) (user types.User, err error) {
 	err = h.db.QueryRow("SELECT * FROM users WHERE id = ?", userId).
-		Scan(&user.Id, &user.Name,&user.Password, &user.Role)
-	return 
+		Scan(&user.Id, &user.Name, &user.Password, &user.Role)
+	return
 }
 
 // get userId
@@ -120,46 +120,46 @@ func (h *Database) GetUserId(username string) (userId string) {
 }
 
 // get session cookie
-func (h *Database) GetSessionCookie(sessionCookie string) (cookie types.SessionCookie){
+func (h *Database) GetSessionCookie(sessionCookie string) (cookie types.SessionCookie) {
 	h.db.QueryRow("SELECT * FROM sessions WHERE cookie = ?", sessionCookie).
-			Scan(&cookie.UserId, &cookie.Cookie, &cookie.Expires)
-	return 
+		Scan(&cookie.UserId, &cookie.Cookie, &cookie.Expires)
+	return
 }
 
-func (h *Database) UserHasSession(userId string) (bool){
+func (h *Database) UserHasSession(userId string) bool {
 	var cookie string
 	h.db.QueryRow("SELECT cookie FROM sessions WHERE userid = ?", userId).Scan(&cookie)
 	return cookie != ""
 }
 
-func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err error){
+func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err error) {
 	var rows *sql.Rows
 	//user not spepcified - get all tickets
 	if len(users) == 0 {
 		rows, err = h.db.Query("SELECT * FROM tickets")
-		if err != nil{
+		if err != nil {
 			return
 		}
 		for rows.Next() {
 			ticket := &types.Ticket{}
 			var issuer string
 			rows.Scan(&ticket.Id, &issuer, &ticket.Date, &ticket.Title, &ticket.Status, &ticket.Content)
-			ticket.Issuer,_ = h.GetUser(issuer)
+			ticket.Issuer, _ = h.GetUser(issuer)
 			tickets = append(tickets, ticket)
 		}
-	//iterate over given users
-	}else{
-		for _,user :=  range users{
+		//iterate over given users
+	} else {
+		for _, user := range users {
 			user = h.GetUserId(user)
-			if user == ""{
+			if user == "" {
 				continue
 			}
-			rows, err = h.db.Query("SELECT * FROM tickets WHERE issuer = ?",user)
+			rows, err = h.db.Query("SELECT * FROM tickets WHERE issuer = ?", user)
 			for rows.Next() {
 				ticket := &types.Ticket{}
 				var issuer string
 				rows.Scan(&ticket.Id, &issuer, &ticket.Date, &ticket.Title, &ticket.Status, &ticket.Content)
-				ticket.Issuer,_ = h.GetUser(issuer)
+				ticket.Issuer, _ = h.GetUser(issuer)
 				tickets = append(tickets, ticket)
 			}
 		}
@@ -167,21 +167,21 @@ func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err e
 	return
 }
 
-func (h *Database) GetTicketIssuer(ticketId string) (userId string, err error){
+func (h *Database) GetTicketIssuer(ticketId string) (userId string, err error) {
 	err = h.db.QueryRow("SELECT issuer FROM tickets WHERE id = ?", ticketId).Scan(&userId)
 	return
 }
 
-func (h *Database) GetTicket(ticketId string) (ticket types.Ticket, err error){
+func (h *Database) GetTicket(ticketId string) (ticket types.Ticket, err error) {
 	var issuer string
 	err = h.db.QueryRow("SELECT * FROM tickets WHERE id = ?", ticketId).
-				Scan(&ticket.Id, &issuer, &ticket.Date,&ticket.Title, &ticket.Status, &ticket.Content)
-	ticket.Issuer,_ = h.GetUser(issuer)
+		Scan(&ticket.Id, &issuer, &ticket.Date, &ticket.Title, &ticket.Status, &ticket.Content)
+	ticket.Issuer, _ = h.GetUser(issuer)
 	return
 }
 
 func (h *Database) UpdateTicket(id string, ticket *types.CreateTicket) error {
 	_, err := h.db.Exec("UPDATE tickets SET title = ?, content = ?  WHERE id = ?",
-								ticket.Title, ticket.Content, id)	
+		ticket.Title, ticket.Content, id)
 	return err
 }
