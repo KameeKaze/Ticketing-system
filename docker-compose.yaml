@@ -13,6 +13,16 @@ services:
         # DEBUG
         ports:
             - "3306:3306"
+    redis:
+        container_name: session-storage
+        image: redis:6.2.7-alpine
+        restart: unless-stopped
+        command: redis-server --requirepass ${DATABASE_PASSWORD}
+        volumes:
+            - redis-data:/data/
+        # DEBUG
+        ports:
+            - "6379:6379"
     website:
         container_name: Ticketing-system
         build: .
@@ -23,7 +33,8 @@ services:
             DATABASE_PASSWORD: ${DATABASE_PASSWORD}
         volumes:
             - ./errors.log:/errors.log
-
 volumes:
   data:
+    driver: local
+  redis-data:
     driver: local

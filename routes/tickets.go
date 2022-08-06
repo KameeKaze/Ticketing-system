@@ -11,7 +11,6 @@ import (
 	"github.com/KameeKaze/Ticketing-system/utils"
 )
 
-
 func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	//connect to database
@@ -28,17 +27,22 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
 		return
 	}
-	sessionCookie := database.GetSessionCookie(cookie.Value)
-	if sessionCookie.Cookie != cookie.Value{
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+	userId, err := db.Redis.GetUserId(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
 		return
 	}
+	if userId == "" {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	} 
 	ticketId := chi.URLParam(r, "id")
 
 	if id, err := database.GetTicketIssuer(ticketId); err != nil {
 		utils.CreateHttpResponse(w, http.StatusNotFound, "Ticket with id does not exit")
 		return
-	}else if id != sessionCookie.UserId{
+	} else if id != userId {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "You can't delete this ticket")
 		return
 	}
@@ -62,7 +66,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
 	}
 	defer database.Close()
- 
+
 	//decode body data
 	data := &types.CreateTicket{}
 	json.NewDecoder(r.Body).Decode(&data)
@@ -79,19 +83,19 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
 		return
 	}
-	sessionCookie := database.GetSessionCookie(cookie.Value)
-	if sessionCookie.Cookie != cookie.Value{
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+	userId, err := db.Redis.GetUserId(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
 		return
 	}
-
-	data.Issuer = sessionCookie.UserId
-	if data.Issuer == ""{
+	if userId == "" {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
-	}
+	} 
 
 	// create ticket
+	data.Issuer = userId
 	if added, err := database.AddTicket(data); err != nil {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "Database error")
 		utils.Logger.Error(err.Error())
@@ -124,11 +128,16 @@ func AllTickets(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
 		return
 	}
-	sessionCookie := database.GetSessionCookie(cookie.Value)
-	if sessionCookie.Cookie != cookie.Value{
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+	userId, err := db.Redis.GetUserId(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
 		return
 	}
+	if userId == "" {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	} 
 
 	tickets, err := database.GetAllTickets(r.URL.Query()["user"])
 	if err != nil {
@@ -141,7 +150,7 @@ func AllTickets(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(j))
 }
 
-func UpdateTicket(w http.ResponseWriter, r *http.Request){
+func UpdateTicket(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	//query user parameter
 
@@ -160,11 +169,16 @@ func UpdateTicket(w http.ResponseWriter, r *http.Request){
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
 		return
 	}
-	sessionCookie := database.GetSessionCookie(cookie.Value)
-	if sessionCookie.Cookie != cookie.Value{
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+	userId, err := db.Redis.GetUserId(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
 		return
 	}
+	if userId == "" {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	} 
 
 	data := &types.CreateTicket{}
 	json.NewDecoder(r.Body).Decode(&data)
@@ -176,7 +190,7 @@ func UpdateTicket(w http.ResponseWriter, r *http.Request){
 	}
 
 	err = database.UpdateTicket(chi.URLParam(r, "id"), data)
-	if err != nil{
+	if err != nil {
 		utils.Logger.Error(err.Error())
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
 		return

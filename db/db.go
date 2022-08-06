@@ -14,9 +14,6 @@ type Database struct {
 	db *sql.DB
 }
 
-func init() {
-	go DeleteExpiredSessions()
-}
 
 func ConnectDB() (*Database, error) {
 	//connect to the database
@@ -43,19 +40,6 @@ func (h *Database) Close() {
 	h.db.Close()
 }
 
-//delete session cookie
-func DeleteExpiredSessions() {
-	database, err := ConnectDB()
-	if err != nil {
-		utils.Logger.Error(err.Error())
-		return
-	}
-	defer database.Close()
-	for {
-		database.db.Exec("DELETE FROM sessions WHERE DATE(expires) > NOW();")
-		time.Sleep(time.Second * 1)
-	}
-}
 
 //add user: [name, password, role] into database
 func (h *Database) AddUser(user *types.Register) error {
@@ -85,25 +69,6 @@ func (h *Database) DeleteTicket(ticketId string) error {
 	return err
 }
 
-//save session cookie
-func (h *Database) SaveCookie(userId, cookie string, expires *time.Time) error {
-	_, err := h.db.Exec("INSERT INTO sessions (userid, cookie, expires) VALUES (?, ?, ?)",
-		userId, cookie, expires)
-	return err
-}
-
-//update session cookie expiration date
-func (h *Database) UpdateCookie(userId, cookie string, expires *time.Time) error {
-	_, err := h.db.Exec("UPDATE sessions SET cookie = ?, expires = ? WHERE userid = ?",
-		cookie, expires, userId)
-	return err
-}
-
-//delete session cookie
-func (h *Database) DeleteCookie(cookie string) error {
-	_, err := h.db.Exec("DELETE FROM sessions WHERE cookie = ?", cookie)
-	return err
-}
 
 // Get user by userId
 func (h *Database) GetUser(userId string) (user types.User, err error) {
@@ -117,19 +82,6 @@ func (h *Database) GetUserId(username string) (userId string) {
 	h.db.QueryRow("SELECT id FROM users WHERE name = ?", username).
 		Scan(&userId)
 	return
-}
-
-// get session cookie
-func (h *Database) GetSessionCookie(sessionCookie string) (cookie types.SessionCookie) {
-	h.db.QueryRow("SELECT * FROM sessions WHERE cookie = ?", sessionCookie).
-		Scan(&cookie.UserId, &cookie.Cookie, &cookie.Expires)
-	return
-}
-
-func (h *Database) UserHasSession(userId string) bool {
-	var cookie string
-	h.db.QueryRow("SELECT cookie FROM sessions WHERE userid = ?", userId).Scan(&cookie)
-	return cookie != ""
 }
 
 func (h *Database) GetAllTickets(users []string) (tickets []*types.Ticket, err error) {

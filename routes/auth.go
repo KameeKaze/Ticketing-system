@@ -45,11 +45,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		userId := database.GetUserId(loginData.Username)
 
 		// update or create session based on user already has a session
-		if database.UserHasSession(userId) {
-			err = database.UpdateCookie(userId, cookie.Value, &cookie.Expires)
-		} else {
-			err = database.SaveCookie(userId, cookie.Value, &cookie.Expires)
-		}
+		db.Redis.SetCookie(userId, cookie.Value, &cookie.Expires)
 		// check error creating new session
 		if err != nil {
 			utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
@@ -86,20 +82,25 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check if session exist
-	sessionCookie := database.GetSessionCookie(cookie.Value)
-	if sessionCookie.Cookie != cookie.Value {
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
-		return
-	} else {
-		//delete cookie
-		if err := database.DeleteCookie(cookie.Value); err != nil {
-			utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
-			utils.Logger.Error(err.Error())
-			return
-		}
-		utils.CreateHttpResponse(w, http.StatusResetContent, "Logging out")
+	userId, err := db.Redis.GetUserId(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
 		return
 	}
+	if userId == "" {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	} 
+
+	//delete cookie
+	if err := db.Redis.DeleteCookie(cookie.Value); err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
+		return
+	}
+	utils.CreateHttpResponse(w, http.StatusResetContent, "Logging out")
+	return
 }
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
@@ -120,12 +121,20 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Login as admin to create user")
 		return
 	}
-	sessionCookie := database.GetSessionCookie(cookie.Value)
-	if sessionCookie.Cookie != cookie.Value {
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+
+	//check if session exist
+	userId, err := db.Redis.GetUserId(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
 		return
 	}
-	user,err := database.GetUser(sessionCookie.UserId)
+	if userId == "" {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	} 
+	
+	user, err := database.GetUser(userId)
 	if err != nil {
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
 		utils.Logger.Error(err.Error())
@@ -172,18 +181,24 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer database.Close()
-
 	cookie, err := r.Cookie("session")
 	// no sesion cookie set
 	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "No sesion cookie specified")
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Login as admin to create user")
 		return
 	}
-	sessionCookie := database.GetSessionCookie(cookie.Value)
-	if sessionCookie.Cookie != cookie.Value {
+
+	//check if session exist
+	userId, err := db.Redis.GetUserId(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
+		return
+	}
+	if userId == "" {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
-	}
+	} 
 
 	//decode body data
 	data := &types.ChangePassword{}
@@ -195,11 +210,6 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if sessionCookie.UserId != database.GetUserId(data.Username) {
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
-		return
-	}
-
 	// comprare password and user password
 	user, err := database.GetUser(database.GetUserId(data.Username))
 	if err != nil {
@@ -208,11 +218,11 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if utils.ComparePassword(user.Password, data.Password) {
-		if err := database.ChangePassword(data.Username, data.NewPassword); err != nil{
+		if err := database.ChangePassword(data.Username, data.NewPassword); err != nil {
 			utils.Logger.Error(err.Error())
 			utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
 			return
-		}else{
+		} else {
 			utils.CreateHttpResponse(w, http.StatusNoContent, "Password successfuly updated")
 			return
 		}

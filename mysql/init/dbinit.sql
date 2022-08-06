@@ -22,10 +22,3 @@ CREATE TABLE tickets (
     FOREIGN KEY (issuer) REFERENCES users(id)
 );
 
-CREATE TABLE sessions (
-    userid     VARCHAR(36) NOT NULL,
-    cookie     VARCHAR(36) NOT NULL,
-    expires    DATETIME     NOT NULL,
-    FOREIGN KEY (userid) REFERENCES users(id)
-);
-

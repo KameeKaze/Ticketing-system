@@ -1,10 +1,10 @@
 package main
 
-import(
+import (
 	"github.com/KameeKaze/Ticketing-system/routes"
 )
 
-func main(){
+func main() {
 	//start
 	routes.RoutesHandler()
 }

@@ -5,8 +5,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/crypto/bcrypt"
-	"os"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-playground/validator/v10"
