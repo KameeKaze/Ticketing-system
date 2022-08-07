@@ -12,6 +12,7 @@ type REDIS struct {
 	db *redis.Client
 }
 
+// defiine database connection for redis
 var (
 	Redis = REDIS{
 		db: redis.NewClient(&redis.Options{

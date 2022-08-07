@@ -46,6 +46,8 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "Successfuly deleted ticket '"+ticketId+"'")
+		utils.Logger.Info("Delete ticket: " + ticketId)
+
 		return
 	}
 }

@@ -36,7 +36,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		userId := db.Mysql.GetUserId(loginData.Username)
 
 		// update or create session based on user already has a session
-		db.Redis.SetCookie(userId, cookie.Value, &cookie.Expires)
+		err = db.Redis.SetCookie(userId, cookie.Value, &cookie.Expires)
 		// check error creating new session
 		if err != nil {
 			utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
@@ -138,6 +138,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			utils.CreateHttpResponse(w, http.StatusCreated, "Creating user "+registerData.Username)
+			utils.Logger.Info("Creating user " + registerData.Username)
 			return
 		}
 	}
@@ -190,6 +191,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			utils.CreateHttpResponse(w, http.StatusNoContent, "Password successfuly updated")
+			utils.Logger.Info(user.Name + " password update")
 			return
 		}
 
