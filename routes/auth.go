@@ -12,15 +12,6 @@ import (
 func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	//connect to database
-	database, err := db.ConnectDB()
-	if err != nil {
-		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
-		return
-	}
-	defer database.Close()
-
 	//decode body data
 	loginData := &types.Login{}
 	json.NewDecoder(r.Body).Decode(&loginData)
@@ -32,7 +23,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// comprare password and user password
-	user, err := database.GetUser(database.GetUserId(loginData.Username))
+	user, err := db.Mysql.GetUser(db.Mysql.GetUserId(loginData.Username))
 	if err != nil {
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
 		utils.Logger.Error(err.Error())
@@ -42,7 +33,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		//generate cookie
 		cookie := utils.GenerateSessionCookie()
 		//get userId
-		userId := database.GetUserId(loginData.Username)
+		userId := db.Mysql.GetUserId(loginData.Username)
 
 		// update or create session based on user already has a session
 		db.Redis.SetCookie(userId, cookie.Value, &cookie.Expires)
@@ -65,15 +56,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func Logout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	//connect to database
-	database, err := db.ConnectDB()
-	if err != nil {
-		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
-		return
-	}
-	defer database.Close()
-
 	cookie, err := r.Cookie("session")
 	// no sesion cookie set
 	if err != nil {
@@ -91,7 +73,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	if userId == "" {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
-	} 
+	}
 
 	//delete cookie
 	if err := db.Redis.DeleteCookie(cookie.Value); err != nil {
@@ -105,15 +87,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
-	//connect to database
-	database, err := db.ConnectDB()
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
-		utils.Logger.Error(err.Error())
-		return
-	}
-	defer database.Close()
 
 	cookie, err := r.Cookie("session")
 	// no sesion cookie set
@@ -132,9 +105,9 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	if userId == "" {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
-	} 
-	
-	user, err := database.GetUser(userId)
+	}
+
+	user, err := db.Mysql.GetUser(userId)
 	if err != nil {
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
 		utils.Logger.Error(err.Error())
@@ -154,11 +127,11 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check if user exist
-	if database.GetUserId(registerData.Username) != "" {
+	if db.Mysql.GetUserId(registerData.Username) != "" {
 		utils.CreateHttpResponse(w, http.StatusConflict, "Username already taken")
 		return
 	} else {
-		err = database.AddUser(registerData)
+		err = db.Mysql.AddUser(registerData)
 		if err != nil {
 			utils.Logger.Error(err.Error())
 			utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
@@ -173,14 +146,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	//connect to database
-	database, err := db.ConnectDB()
-	if err != nil {
-		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
-		return
-	}
-	defer database.Close()
+
 	cookie, err := r.Cookie("session")
 	// no sesion cookie set
 	if err != nil {
@@ -198,7 +164,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	if userId == "" {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
-	} 
+	}
 
 	//decode body data
 	data := &types.ChangePassword{}
@@ -211,14 +177,14 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// comprare password and user password
-	user, err := database.GetUser(database.GetUserId(data.Username))
+	user, err := db.Mysql.GetUser(db.Mysql.GetUserId(data.Username))
 	if err != nil {
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
 		utils.Logger.Error(err.Error())
 		return
 	}
 	if utils.ComparePassword(user.Password, data.Password) {
-		if err := database.ChangePassword(data.Username, data.NewPassword); err != nil {
+		if err := db.Mysql.ChangePassword(data.Username, data.NewPassword); err != nil {
 			utils.Logger.Error(err.Error())
 			utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
 			return

@@ -14,32 +14,23 @@ type Database struct {
 	db *sql.DB
 }
 
-
-func ConnectDB() (*Database, error) {
-	//connect to the database
-	db, _ := func() (*sql.DB, error) {
-		dbUser := "root"
-		dbPass := os.Getenv("DATABASE_PASSWORD")
-		dbName := "ticketing_system"
-		dbHost := "127.0.0.1:3306"
-		return sql.Open("mysql", dbUser+":"+dbPass+"@("+dbHost+")/"+dbName+"?parseTime=true")
-	}()
-
-	//create db stuct
-	DbHandler := &Database{
-		db: db,
+// defiine database connection for mysql
+var (
+	Mysql = Database{
+		db: func() *sql.DB {
+			dbUser := "root"
+			dbPass := os.Getenv("DATABASE_PASSWORD")
+			dbName := "ticketing_system"
+			dbHost := "127.0.0.1:3306"
+			database, _ := sql.Open("mysql", dbUser+":"+dbPass+"@("+dbHost+")/"+dbName+"?parseTime=true")
+			return database
+		}(),
 	}
-
-	//return error if can't ping database
-	err := DbHandler.db.Ping()
-
-	return DbHandler, err
-}
+)
 
 func (h *Database) Close() {
 	h.db.Close()
 }
-
 
 //add user: [name, password, role] into database
 func (h *Database) AddUser(user *types.Register) error {
@@ -68,7 +59,6 @@ func (h *Database) DeleteTicket(ticketId string) error {
 	_, err := h.db.Exec("DELETE FROM tickets WHERE id = ?", ticketId)
 	return err
 }
-
 
 // Get user by userId
 func (h *Database) GetUser(userId string) (user types.User, err error) {

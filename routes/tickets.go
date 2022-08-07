@@ -13,13 +13,6 @@ import (
 
 func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	//connect to database
-	database, err := db.ConnectDB()
-	if err != nil {
-		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
-	}
-	defer database.Close()
 
 	cookie, err := r.Cookie("session")
 	// no sesion cookie set
@@ -36,10 +29,10 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 	if userId == "" {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
-	} 
+	}
 	ticketId := chi.URLParam(r, "id")
 
-	if id, err := database.GetTicketIssuer(ticketId); err != nil {
+	if id, err := db.Mysql.GetTicketIssuer(ticketId); err != nil {
 		utils.CreateHttpResponse(w, http.StatusNotFound, "Ticket with id does not exit")
 		return
 	} else if id != userId {
@@ -47,7 +40,7 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// delete ticket in database
-	if err := database.DeleteTicket(ticketId); err != nil {
+	if err := db.Mysql.DeleteTicket(ticketId); err != nil {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "Database error")
 		utils.Logger.Error(err.Error())
 		return
@@ -59,13 +52,6 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 
 func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	//connect to database
-	database, err := db.ConnectDB()
-	if err != nil {
-		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
-	}
-	defer database.Close()
 
 	//decode body data
 	data := &types.CreateTicket{}
@@ -92,11 +78,11 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	if userId == "" {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
-	} 
+	}
 
 	// create ticket
 	data.Issuer = userId
-	if added, err := database.AddTicket(data); err != nil {
+	if added, err := db.Mysql.AddTicket(data); err != nil {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "Database error")
 		utils.Logger.Error(err.Error())
 		return
@@ -111,16 +97,6 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 
 func AllTickets(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	//query user parameter
-
-	//connect to database
-	database, err := db.ConnectDB()
-	if err != nil {
-		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
-		return
-	}
-	defer database.Close()
 
 	cookie, err := r.Cookie("session")
 	// no sesion cookie set
@@ -137,9 +113,9 @@ func AllTickets(w http.ResponseWriter, r *http.Request) {
 	if userId == "" {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
-	} 
+	}
 
-	tickets, err := database.GetAllTickets(r.URL.Query()["user"])
+	tickets, err := db.Mysql.GetAllTickets(r.URL.Query()["user"])
 	if err != nil {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "Database error")
 		utils.Logger.Error(err.Error())
@@ -154,15 +130,6 @@ func UpdateTicket(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	//query user parameter
 
-	//connect to database
-	database, err := db.ConnectDB()
-	if err != nil {
-		utils.Logger.Error(err.Error())
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Can't connect to database")
-		return
-	}
-	defer database.Close()
-
 	cookie, err := r.Cookie("session")
 	// no sesion cookie set
 	if err != nil {
@@ -178,7 +145,7 @@ func UpdateTicket(w http.ResponseWriter, r *http.Request) {
 	if userId == "" {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
-	} 
+	}
 
 	data := &types.CreateTicket{}
 	json.NewDecoder(r.Body).Decode(&data)
@@ -189,7 +156,7 @@ func UpdateTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = database.UpdateTicket(chi.URLParam(r, "id"), data)
+	err = db.Mysql.UpdateTicket(chi.URLParam(r, "id"), data)
 	if err != nil {
 		utils.Logger.Error(err.Error())
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
