@@ -35,12 +35,12 @@ func (r *REDIS) GetCookie(userId string) (string, error) {
 }
 
 func (r *REDIS) GetUserId(cookie string) (string, error) {
-	var err error
-	iter := r.db.Scan(ctx, 0, "*", 0).Iterator()
-	for iter.Next(ctx) {
-		val, err := r.db.Get(ctx, iter.Val()).Result()
+	keys, _, err := r.db.Scan(ctx, 0, "*", 0).Result()
+
+	for _, key := range keys {
+		val, err := r.db.Get(ctx, key).Result()
 		if val == cookie {
-			return iter.Val(), err
+			return key, err
 		}
 	}
 

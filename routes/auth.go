@@ -24,6 +24,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// comprare password and user password
 	user, err := db.Mysql.GetUser(db.Mysql.GetUserId(loginData.Username))
+	if user.Name == "" {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid credentials")
+		return
+	}
 	if err != nil {
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
 		utils.Logger.Error(err.Error())
