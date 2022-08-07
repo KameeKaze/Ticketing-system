@@ -23,9 +23,14 @@ var (
 			dbName := "ticketing_system"
 			dbHost := "127.0.0.1:3306"
 			database, _ := sql.Open("mysql", dbUser+":"+dbPass+"@("+dbHost+")/"+dbName+"?parseTime=true")
+
+			database.SetMaxOpenConns(10)
+			database.SetMaxIdleConns(10)
+			database.SetConnMaxLifetime(5*time.Minute)
 			return database
 		}(),
 	}
+	
 )
 
 func (h *Database) Close() {
