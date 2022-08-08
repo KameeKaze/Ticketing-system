@@ -16,7 +16,7 @@ type REDIS struct {
 var (
 	Redis = REDIS{
 		db: redis.NewClient(&redis.Options{
-			Addr:     "localhost:6379",
+			Addr:     "session-storage:6379",
 			Password: os.Getenv("DATABASE_PASSWORD"),
 			DB:       0,
 		}),

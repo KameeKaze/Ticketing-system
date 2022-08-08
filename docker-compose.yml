@@ -10,9 +10,6 @@ services:
         volumes:
             - ./mysql/init:/docker-entrypoint-initdb.d/
             - data:/var/lib/mysql/
-        # DEBUG
-        ports:
-            - "3306:3306"
     redis:
         container_name: session-storage
         image: redis:6.2.7-alpine
@@ -20,9 +17,6 @@ services:
         command: redis-server --requirepass ${DATABASE_PASSWORD}
         volumes:
             - redis-data:/data/
-        # DEBUG
-        ports:
-            - "6379:6379"
     website:
         container_name: Ticketing-system
         build: .
@@ -31,8 +25,10 @@ services:
             - ${PORT}:3000
         environment:
             DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+            PORT: ${PORT}
         volumes:
             - ./errors.log:/errors.log
+
 volumes:
   data:
     driver: local

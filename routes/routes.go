@@ -3,15 +3,12 @@ package routes
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/KameeKaze/Ticketing-system/utils"
-)
-
-const (
-	PORT = ":3000"
 )
 
 func RoutesHandler() {
@@ -30,8 +27,8 @@ func RoutesHandler() {
 	r.Get("/tickets", AllTickets)
 
 	//start
-	fmt.Println("Running on http://127.0.0.1" + PORT)
-	http.ListenAndServe(PORT, r)
+	fmt.Println("Running on http://127.0.0.1:" + os.Getenv("PORT"))
+	http.ListenAndServe(":3000", r)
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
