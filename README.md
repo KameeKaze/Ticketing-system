@@ -1,6 +1,10 @@
 # Ticketing-system
 
 ## A simple open-source ticketing system written in go.
+
+### Admin user
+ `admin:admin // change this password`
+
 ----
 **POST** `/register`
 ```

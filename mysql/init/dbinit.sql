@@ -22,3 +22,5 @@ CREATE TABLE tickets (
     FOREIGN KEY (issuer) REFERENCES users(id)
 );
 
+-- admin:admin
+INSERT INTO users (id, name, password, role) VALUES (UUID(), "admin", "$2a$07$qG7WMfWkMvsTgQfCEaMxtex5VOYIZHlZX0cTRnsW0tH3gE.br4xKK", "admin");
