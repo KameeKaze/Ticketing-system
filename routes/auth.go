@@ -86,7 +86,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.CreateHttpResponse(w, http.StatusResetContent, "Logging out")
-	return
 }
 
 func SignUp(w http.ResponseWriter, r *http.Request) {

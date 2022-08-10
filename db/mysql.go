@@ -22,7 +22,7 @@ var (
 			dbUser := "root"
 			dbPass := os.Getenv("DATABASE_PASSWORD")
 			dbName := "ticketing_system"
-			dbHost := "database:3306"
+			dbHost := "127.0.0.1:3306"
 			database, _ := sql.Open("mysql", dbUser+":"+dbPass+"@("+dbHost+")/"+dbName+"?parseTime=true")
 
 			database.SetMaxOpenConns(10)
@@ -130,5 +130,10 @@ func (h *Database) GetTicket(ticketId string) (ticket types.Ticket, err error) {
 func (h *Database) UpdateTicket(id string, ticket *types.CreateTicket) error {
 	_, err := h.db.Exec("UPDATE tickets SET title = ?, content = ?  WHERE id = ?",
 		ticket.Title, ticket.Content, id)
+	return err
+}
+
+func (h *Database) CloseTicket(id string) error {
+	_, err := h.db.Exec("UPDATE tickets SET status = 2  WHERE id = ?", id)
 	return err
 }

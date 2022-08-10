@@ -89,6 +89,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		utils.Logger.Error(err.Error())
 		return
 	} else if added {
+		utils.Logger.Info(data.Issuer + " successfully created a ticket")
 		utils.CreateHttpResponse(w, http.StatusCreated, "Ticket successfully created")
 		return
 	} else {
@@ -124,7 +125,7 @@ func AllTickets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	j, err := json.Marshal(tickets)
+	j, _ := json.Marshal(tickets)
 	w.Write([]byte(j))
 }
 
@@ -166,5 +167,35 @@ func UpdateTicket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.CreateHttpResponse(w, http.StatusNoContent, "")
-	return
+}
+
+func CloseTicket(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	//query user parameter
+
+	cookie, err := r.Cookie("session")
+	// no sesion cookie set
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
+		return
+	}
+	userId, err := db.Redis.GetUserId(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
+		return
+	}
+	if userId == "" {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	}
+	if db.Mysql.CloseTicket(chi.URLParam(r, "id")) != nil {
+		utils.Logger.Error(err.Error())
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		return
+	} else {
+		utils.CreateHttpResponse(w, http.StatusNoContent, "")
+		return
+	}
+
 }

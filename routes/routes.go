@@ -23,6 +23,7 @@ func RoutesHandler() {
 	r.Put("/tickets/create", CreateTicket)
 	r.Post("/tickets/{id}", UpdateTicket)
 	r.Delete("/tickets/{id}", DeleteTicket)
+	r.Post("/tickets/close/{id}", CloseTicket)
 	r.Delete("/logout", Logout)
 	r.Get("/tickets", AllTickets)
 
