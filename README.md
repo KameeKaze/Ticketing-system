@@ -57,6 +57,24 @@ Cookie: session=<sessionid>
     "content":"Lorem Ipsum"
 }
 ```
+
+
+----
+**POST** `/tickets/{id}`
+```
+Cookie: session=<sessionid>
+```
+```
+{
+    "title":"This is a ticket update",
+    "content":"Lorem Ipsum Lorem Ipsum"
+}
+```
+----
+**POST** `/tickets/close/{id}`
+```
+Cookie: session=<sessionid>
+```
 ----
 **GET** `/tickets?user={user1}&user={user2}`
 
