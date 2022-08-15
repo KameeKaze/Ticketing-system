@@ -71,7 +71,12 @@ Cookie: session=<sessionid>
 }
 ```
 ----
-**POST** `/tickets/close/{id}`
+**POST** `/tickets/closed/{id}`
+```
+Cookie: session=<sessionid>
+```
+----
+**POST** `/tickets/inprog/{id}`
 ```
 Cookie: session=<sessionid>
 ```
