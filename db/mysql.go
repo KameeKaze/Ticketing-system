@@ -22,7 +22,7 @@ var (
 			dbUser := "root"
 			dbPass := os.Getenv("DATABASE_PASSWORD")
 			dbName := "ticketing_system"
-			dbHost := "127.0.0.1:3306"
+			dbHost := "database:3306"
 			database, _ := sql.Open("mysql", dbUser+":"+dbPass+"@("+dbHost+")/"+dbName+"?parseTime=true")
 
 			database.SetMaxOpenConns(10)
