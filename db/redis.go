@@ -25,7 +25,7 @@ var (
 )
 
 func (r *REDIS) SetCookie(userId, cookie string, expires *time.Time) error {
-	err := r.db.Set(ctx, userId, cookie, expires.Sub(time.Now())).Err()
+	err := r.db.Set(ctx, userId, cookie, time.Until(*expires)).Err()
 	return err
 }
 
