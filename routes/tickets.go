@@ -189,7 +189,38 @@ func CloseTicket(w http.ResponseWriter, r *http.Request) {
 		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return
 	}
-	if db.Mysql.CloseTicket(chi.URLParam(r, "id")) != nil {
+	if db.Mysql.UpdateTicketStatus(2, chi.URLParam(r, "id")) != nil {
+		utils.Logger.Error(err.Error())
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		return
+	} else {
+		utils.CreateHttpResponse(w, http.StatusNoContent, "")
+		return
+	}
+
+}
+
+func InProgTicket(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	//query user parameter
+
+	cookie, err := r.Cookie("session")
+	// no sesion cookie set
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
+		return
+	}
+	userId, err := db.Redis.GetUserId(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
+		return
+	}
+	if userId == "" {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return
+	}
+	if db.Mysql.UpdateTicketStatus(1, chi.URLParam(r, "id")) != nil {
 		utils.Logger.Error(err.Error())
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
 		return

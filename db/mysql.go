@@ -133,7 +133,7 @@ func (h *Database) UpdateTicket(id string, ticket *types.CreateTicket) error {
 	return err
 }
 
-func (h *Database) CloseTicket(id string) error {
-	_, err := h.db.Exec("UPDATE tickets SET status = 2  WHERE id = ?", id)
+func (h *Database) UpdateTicketStatus(status int, id string) error {
+	_, err := h.db.Exec("UPDATE tickets SET status = ?  WHERE id = ?", status, id)
 	return err
 }
