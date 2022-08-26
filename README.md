@@ -47,7 +47,7 @@ Cookie: session=<sessionid>
 Cookie: session=<sessionid>
 ```
 ----
-**PUT** `/tickets/create`
+**POST** `/tickets`
 ```
 Cookie: session=<sessionid>
 ```
@@ -60,7 +60,7 @@ Cookie: session=<sessionid>
 
 
 ----
-**POST** `/tickets/{id}`
+**PUT** `/tickets/{id}`
 ```
 Cookie: session=<sessionid>
 ```
@@ -71,12 +71,7 @@ Cookie: session=<sessionid>
 }
 ```
 ----
-**POST** `/tickets/closed/{id}`
-```
-Cookie: session=<sessionid>
-```
-----
-**POST** `/tickets/inprog/{id}`
+**PUT** `/tickets/{id}/{status}`
 ```
 Cookie: session=<sessionid>
 ```
