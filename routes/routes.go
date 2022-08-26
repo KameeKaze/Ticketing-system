@@ -17,16 +17,15 @@ func RoutesHandler() {
 
 	//routes
 	r.Get("/", Home)
-	r.Post("/login", Login)
-	r.Post("/register", SignUp)
-	r.Post("/changepassword", ChangePassword)
-	r.Put("/tickets/create", CreateTicket)
-	r.Post("/tickets/{id}", UpdateTicket)
-	r.Delete("/tickets/{id}", DeleteTicket)
-	r.Post("/tickets/closed/{id}", CloseTicket)
-	r.Post("/tickets/inprog/{id}", InProgTicket)
-	r.Delete("/logout", Logout)
-	r.Get("/tickets", AllTickets)
+	r.Post("/api/login", Login)
+	r.Post("/api/register", SignUp)
+	r.Post("/api/changepassword", ChangePassword)
+	r.Post("/api/tickets", CreateTicket)
+	r.Get("/api/tickets", AllTickets)
+	r.Put("/api/tickets/{id}", UpdateTicket)
+	r.Put("/api/tickets/{id}/{status}", UpdateTicketStatus)
+	r.Delete("/api/tickets/{id}", DeleteTicket)
+	r.Delete("/api/logout", Logout)
 
 	//start
 	fmt.Println("Running on http://127.0.0.1:" + os.Getenv("PORT"))
