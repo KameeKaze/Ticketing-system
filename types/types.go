@@ -32,8 +32,8 @@ type Login struct {
 }
 
 type ChangePassword struct {
-	Username    string `json:"username" validate:"required"`
-	Password    string `json:"password" validate:"required"`
+	Username    string `json:"username"    validate:"required"`
+	Password    string `json:"password"    validate:"required"`
 	NewPassword string `json:"newpassword" validate:"required"`
 }
 
@@ -43,7 +43,7 @@ type Register struct {
 	Role     string `json:"role"     validate:"required"`
 }
 
-type CreateTicket struct {
+type HTTPTicket struct {
 	Issuer  string `json:"issuer"`
 	Title   string `json:"title"   validate:"required"`
 	Content string `json:"content" validate:"required"`

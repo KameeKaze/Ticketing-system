@@ -1,18 +1,16 @@
 package utils
 
 import (
-	"encoding/json"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"os"
 	"time"
 
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-
-	"github.com/KameeKaze/Ticketing-system/types"
 )
 
 func init() {
@@ -21,7 +19,7 @@ func init() {
 
 var Logger *zap.Logger
 
-//create logger
+// create logger
 func Logging() {
 	// the log file
 	logFile, _ := os.OpenFile("errors.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -42,7 +40,7 @@ func Logging() {
 
 }
 
-//hash the user's password
+// hash the user's password
 func HashPassword(password string) string {
 	// Create a byte slice
 	var passwordBytes = []byte(password)
@@ -60,17 +58,6 @@ func ComparePassword(hashedPassword, password string) bool {
 func ValidateJSON(data interface{}) bool {
 	validate := validator.New()
 	return validate.Struct(data) != nil
-}
-
-func CreateHttpResponse(w http.ResponseWriter, statusCode int, text string) {
-	//set status code
-	w.WriteHeader(statusCode)
-	//create json
-	r, _ := json.Marshal(types.ResponseBody{
-		Msg: text,
-	})
-	//send data
-	w.Write([]byte(r))
 }
 
 func GenerateSessionCookie() *http.Cookie {
