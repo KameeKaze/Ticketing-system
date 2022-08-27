@@ -12,24 +12,13 @@ import (
 )
 
 func DeleteTicket(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	if !checkHTTPRequest(w, r, new(interface{})) {
+		return
+	}
+	// get session cookie
+	cookie, _ := r.Cookie("session")
+	userId, _ := db.Redis.GetUserId(cookie.Value)
 
-	cookie, err := r.Cookie("session")
-	// no sesion cookie set
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
-		return
-	}
-	userId, err := db.Redis.GetUserId(cookie.Value)
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
-		utils.Logger.Error(err.Error())
-		return
-	}
-	if userId == "" {
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
-		return
-	}
 	ticketId := chi.URLParam(r, "id")
 
 	if id, err := db.Mysql.GetTicketIssuer(ticketId); err != nil {
@@ -53,43 +42,22 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateTicket(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	//decode body data
-	data := &types.CreateTicket{}
-	json.NewDecoder(r.Body).Decode(&data)
-
-	// check if request was valid
-	if utils.ValidateJSON(data) {
-		utils.CreateHttpResponse(w, http.StatusBadRequest, "Invalid request")
+	body := types.CreateTicket{}
+	if !checkHTTPRequest(w, r, &body) {
 		return
 	}
-
-	cookie, err := r.Cookie("session")
-	// no sesion cookie set
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
-		return
-	}
-	userId, err := db.Redis.GetUserId(cookie.Value)
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
-		utils.Logger.Error(err.Error())
-		return
-	}
-	if userId == "" {
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
-		return
-	}
+	// get session cookie
+	cookie, _ := r.Cookie("session")
+	userId, _ := db.Redis.GetUserId(cookie.Value)
 
 	// create ticket
-	data.Issuer = userId
-	if added, err := db.Mysql.AddTicket(data); err != nil {
+	body.Issuer = userId
+	if added, err := db.Mysql.AddTicket(&body); err != nil {
 		utils.CreateHttpResponse(w, http.StatusBadRequest, "Database error")
 		utils.Logger.Error(err.Error())
 		return
 	} else if added {
-		utils.Logger.Info(data.Issuer + " successfully created a ticket")
+		utils.Logger.Info(body.Issuer + " successfully created a ticket")
 		utils.CreateHttpResponse(w, http.StatusCreated, "Ticket successfully created")
 		return
 	} else {
@@ -99,22 +67,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 }
 
 func AllTickets(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	cookie, err := r.Cookie("session")
-	// no sesion cookie set
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
-		return
-	}
-	userId, err := db.Redis.GetUserId(cookie.Value)
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
-		utils.Logger.Error(err.Error())
-		return
-	}
-	if userId == "" {
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+	if !checkHTTPRequest(w, r, new(interface{})) {
 		return
 	}
 
@@ -130,36 +83,12 @@ func AllTickets(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateTicket(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	//query user parameter
-
-	cookie, err := r.Cookie("session")
-	// no sesion cookie set
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
-		return
-	}
-	userId, err := db.Redis.GetUserId(cookie.Value)
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
-		utils.Logger.Error(err.Error())
-		return
-	}
-	if userId == "" {
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+	body := types.CreateTicket{}
+	if !checkHTTPRequest(w, r, &body) {
 		return
 	}
 
-	data := &types.CreateTicket{}
-	json.NewDecoder(r.Body).Decode(&data)
-
-	// check if request was valid
-	if utils.ValidateJSON(data) {
-		utils.CreateHttpResponse(w, http.StatusBadRequest, "Invalid request")
-		return
-	}
-
-	err = db.Mysql.UpdateTicket(chi.URLParam(r, "id"), data)
+	err := db.Mysql.UpdateTicket(chi.URLParam(r, "id"), &body)
 	if err != nil {
 		utils.Logger.Error(err.Error())
 		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
@@ -170,26 +99,9 @@ func UpdateTicket(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateTicketStatus(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	//query user parameter
-
-	cookie, err := r.Cookie("session")
-	// no sesion cookie set
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
+	if !checkHTTPRequest(w, r, new(interface{})) {
 		return
 	}
-	userId, err := db.Redis.GetUserId(cookie.Value)
-	if err != nil {
-		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
-		utils.Logger.Error(err.Error())
-		return
-	}
-	if userId == "" {
-		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
-		return
-	}
-
 	status := chi.URLParam(r, "status")
 
 	switch status {
@@ -223,4 +135,45 @@ func InProgTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+func checkHTTPRequest[T any](w http.ResponseWriter, r *http.Request, body *T) bool {
+	//set headers
+	w.Header().Set("Content-Type", "application/json")
+
+	// get session cookie
+	cookie, err := r.Cookie("session")
+	// no sesion cookie set
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
+		return false
+	}
+	// get user from cookie
+	userId, err := db.Redis.GetUserId(cookie.Value)
+	if err != nil {
+		utils.CreateHttpResponse(w, http.StatusInternalServerError, "Database error")
+		utils.Logger.Error(err.Error())
+		return false
+	}
+	//user not logged in or not exist
+	if userId == "" {
+		utils.CreateHttpResponse(w, http.StatusUnauthorized, "Invalid session")
+		return false
+	}
+
+	json.NewDecoder(r.Body).Decode(&body)
+	//check if body requered
+	var ret T
+	switch any(&ret).(type) {
+	case any:
+		return true
+	}
+
+	// check if request was valid
+	if utils.ValidateJSON(body) {
+		utils.CreateHttpResponse(w, http.StatusBadRequest, "Invalid request")
+		return false
+	}
+
+	return true
 }
