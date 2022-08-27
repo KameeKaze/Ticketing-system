@@ -13,17 +13,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	//decode body data
-	loginData := &types.Login{}
-	json.NewDecoder(r.Body).Decode(&loginData)
+	body := &types.Login{}
+	json.NewDecoder(r.Body).Decode(&body)
 
 	// check if request was valid
-	if utils.ValidateJSON(loginData) {
+	if utils.ValidateJSON(body) {
 		createHttpResponse(w, http.StatusBadRequest, "Invalid request")
 		return
 	}
 
 	// comprare password and user password
-	user, err := db.Mysql.GetUser(db.Mysql.GetUserId(loginData.Username))
+	user, err := db.Mysql.GetUser(db.Mysql.GetUserId(body.Username))
 	if user.Name == "" {
 		createHttpResponse(w, http.StatusUnauthorized, "Invalid credentials")
 		return
@@ -33,14 +33,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		utils.Logger.Error(err.Error())
 		return
 	}
-	if utils.ComparePassword(user.Password, loginData.Password) {
+
+	if utils.ComparePassword(user.Password, body.Password) {
 		//generate cookie
 		cookie := utils.GenerateSessionCookie()
 		//get userId
-		userId := db.Mysql.GetUserId(loginData.Username)
+		userId := db.Mysql.GetUserId(body.Username)
 
 		// update or create session based on user already has a session
-		err = db.Redis.SetCookie(userId, cookie.Value, &cookie.Expires)
+		err := db.Redis.SetCookie(userId, cookie.Value, &cookie.Expires)
 		// check error creating new session
 		if err != nil {
 			createHttpResponse(w, http.StatusInternalServerError, "Database error")
@@ -48,7 +49,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			http.SetCookie(w, cookie)
-			createHttpResponse(w, http.StatusOK, "Logging in "+loginData.Username)
+			createHttpResponse(w, http.StatusOK, "Logging in "+body.Username)
 		}
 
 	} else {
@@ -58,26 +59,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	cookie, err := r.Cookie("session")
-	// no sesion cookie set
-	if err != nil {
-		createHttpResponse(w, http.StatusBadRequest, "No sesion cookie specified")
+	if !checkHTTPRequest(w, r, new(interface{})) {
 		return
 	}
 
-	//check if session exist
-	userId, err := db.Redis.GetUserId(cookie.Value)
-	if err != nil {
-		createHttpResponse(w, http.StatusInternalServerError, "Database error")
-		utils.Logger.Error(err.Error())
-		return
-	}
-	if userId == "" {
-		createHttpResponse(w, http.StatusUnauthorized, "Invalid session")
-		return
-	}
+	cookie, _ := r.Cookie("session")
 
 	//delete cookie
 	if err := db.Redis.DeleteCookie(cookie.Value); err != nil {
@@ -149,46 +135,20 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func ChangePassword(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	cookie, err := r.Cookie("session")
-	// no sesion cookie set
-	if err != nil {
-		createHttpResponse(w, http.StatusUnauthorized, "Login as admin to create user")
-		return
-	}
-
-	//check if session exist
-	userId, err := db.Redis.GetUserId(cookie.Value)
-	if err != nil {
-		createHttpResponse(w, http.StatusInternalServerError, "Database error")
-		utils.Logger.Error(err.Error())
-		return
-	}
-	if userId == "" {
-		createHttpResponse(w, http.StatusUnauthorized, "Invalid session")
-		return
-	}
-
-	//decode body data
-	data := &types.ChangePassword{}
-	json.NewDecoder(r.Body).Decode(&data)
-
-	// check if request was valid
-	if utils.ValidateJSON(data) {
-		createHttpResponse(w, http.StatusBadRequest, "Invalid request")
+	body := types.ChangePassword{}
+	if !checkHTTPRequest(w, r, &body) {
 		return
 	}
 
 	// comprare password and user password
-	user, err := db.Mysql.GetUser(db.Mysql.GetUserId(data.Username))
+	user, err := db.Mysql.GetUser(db.Mysql.GetUserId(body.Username))
 	if err != nil {
 		createHttpResponse(w, http.StatusInternalServerError, "Database error")
 		utils.Logger.Error(err.Error())
 		return
 	}
-	if utils.ComparePassword(user.Password, data.Password) {
-		if err := db.Mysql.ChangePassword(data.Username, data.NewPassword); err != nil {
+	if utils.ComparePassword(user.Password, body.Password) {
+		if err := db.Mysql.ChangePassword(body.Username, body.NewPassword); err != nil {
 			utils.Logger.Error(err.Error())
 			createHttpResponse(w, http.StatusInternalServerError, "Database error")
 			return
