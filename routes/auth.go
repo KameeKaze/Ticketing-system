@@ -107,31 +107,36 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//decode body data
-	registerData := &types.Register{}
-	json.NewDecoder(r.Body).Decode(&registerData)
+	body := &types.Register{}
+	json.NewDecoder(r.Body).Decode(&body)
 
-	if utils.ValidateJSON(registerData) {
+	if utils.ValidateJSON(body) {
 		createHttpResponse(w, http.StatusBadRequest, "Invalid request")
 		return
 	}
 
 	//check if user exist
-	if db.Mysql.GetUserId(registerData.Username) != "" {
+	if db.Mysql.GetUserId(body.Username) != "" {
 		createHttpResponse(w, http.StatusConflict, "Username already taken")
 		return
-	} else {
-		err = db.Mysql.AddUser(registerData)
-		if err != nil {
-			utils.Logger.Error(err.Error())
-			createHttpResponse(w, http.StatusInternalServerError, "Database error")
-			return
-		} else {
-			createHttpResponse(w, http.StatusCreated, "Creating user "+registerData.Username)
-			utils.Logger.Info("Creating user " + registerData.Username)
-			return
+	}
+	for _, v := range types.ROLES {
+		// check role
+		if body.Role == v {
+			//create user
+			err = db.Mysql.AddUser(body)
+			if err != nil {
+				utils.Logger.Error(err.Error())
+				createHttpResponse(w, http.StatusInternalServerError, "Database error")
+				return
+			} else {
+				createHttpResponse(w, http.StatusCreated, "Creating user "+body.Username)
+				utils.Logger.Info("Creating user " + body.Username)
+				return
+			}
 		}
 	}
-
+	createHttpResponse(w, http.StatusBadRequest, "Invalid role")
 }
 
 func ChangePassword(w http.ResponseWriter, r *http.Request) {
