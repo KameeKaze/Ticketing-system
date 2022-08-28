@@ -159,7 +159,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			createHttpResponse(w, http.StatusNoContent, "Password successfuly updated")
-			utils.Logger.Info(user.Name + " password update")
+			utils.Logger.Info(user.Id + " password update")
 			return
 		}
 

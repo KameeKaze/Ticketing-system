@@ -36,7 +36,6 @@ func DeleteTicket(w http.ResponseWriter, r *http.Request) {
 	} else {
 		createHttpResponse(w, http.StatusBadRequest, "Successfuly deleted ticket '"+ticketId+"'")
 		utils.Logger.Info("Delete ticket: " + ticketId)
-
 		return
 	}
 }
@@ -96,6 +95,7 @@ func UpdateTicket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	createHttpResponse(w, http.StatusNoContent, "")
+	utils.Logger.Info(body.Issuer + " updated ticket " + chi.URLParam(r, "id"))
 }
 
 func UpdateTicketStatus(w http.ResponseWriter, r *http.Request) {
@@ -103,35 +103,25 @@ func UpdateTicketStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	status := chi.URLParam(r, "status")
+	statusCode := 0
 
 	switch status {
 	case "inprog":
-		InProgTicket(w, r)
+		statusCode = 1
 	case "closed":
-		CloseTicket(w, r)
+		statusCode = 2
+	default:
+		createHttpResponse(w, http.StatusBadRequest, "Invalid status "+status)
+		return
 	}
 
-}
-
-func CloseTicket(w http.ResponseWriter, r *http.Request) {
-	if err := db.Mysql.UpdateTicketStatus(2, chi.URLParam(r, "id")); err != nil {
+	if err := db.Mysql.UpdateTicketStatus(statusCode, chi.URLParam(r, "id")); err != nil {
 		utils.Logger.Error(err.Error())
 		createHttpResponse(w, http.StatusInternalServerError, "Database error")
 		return
 	} else {
 		createHttpResponse(w, http.StatusNoContent, "")
-		return
-	}
-
-}
-
-func InProgTicket(w http.ResponseWriter, r *http.Request) {
-	if err := db.Mysql.UpdateTicketStatus(1, chi.URLParam(r, "id")); err != nil {
-		utils.Logger.Error(err.Error())
-		createHttpResponse(w, http.StatusInternalServerError, "Database error")
-		return
-	} else {
-		createHttpResponse(w, http.StatusNoContent, "")
+		utils.Logger.Info("updated ticket " + chi.URLParam(r, "id"))
 		return
 	}
 
