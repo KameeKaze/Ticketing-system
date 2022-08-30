@@ -38,7 +38,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	createHttpResponse(w, http.StatusOK, "Ticketing system")
 }
 
-func checkHTTPRequest[T any](w http.ResponseWriter, r *http.Request, body *T) bool {
+func checkHTTPRequest(w http.ResponseWriter, r *http.Request, body interface{}) bool {
 	//set headers
 	w.Header().Set("Content-Type", "application/json")
 
@@ -61,14 +61,14 @@ func checkHTTPRequest[T any](w http.ResponseWriter, r *http.Request, body *T) bo
 		createHttpResponse(w, http.StatusUnauthorized, "Invalid session")
 		return false
 	}
-
-	json.NewDecoder(r.Body).Decode(&body)
-	//check if body requered
-	var ret T
-	switch any(&ret).(type) {
+	// return if body type is empty interface (no body)
+	switch body.(type) {
 	case any:
 		return true
 	}
+
+	// decode body json data
+	json.NewDecoder(r.Body).Decode(&body)
 
 	// check if request was valid
 	if utils.ValidateJSON(body) {
