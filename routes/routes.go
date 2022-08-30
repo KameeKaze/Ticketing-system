@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -31,7 +30,7 @@ func RoutesHandler() {
 	r.Delete("/api/logout", Logout)
 
 	//start
-	fmt.Println("Running on http://127.0.0.1:" + os.Getenv("PORT"))
+	fmt.Println("Running on http://127.0.0.1:" + types.PORT)
 	http.ListenAndServe(":3000", r)
 }
 

@@ -7,9 +7,10 @@ import (
 )
 
 var (
-	ROLES             = []string{"programmer", "admin"}
-	PORT              = envVar("PORT")
-	DATABASE_PASSWORD = envVar("DATABASE_PASSWORD")
+	ROLES          = []string{"programmer", "admin"}
+	PORT           = envVar("PORT")
+	MYSQL_PASSWORD = envVar("MYSQL_PASSWORD")
+	REDIS_PASSWORD = envVar("REDIS_PASSWORD")
 )
 
 func envVar(name string) (value string) {

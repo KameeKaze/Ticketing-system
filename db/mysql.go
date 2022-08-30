@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"os"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -20,9 +19,9 @@ var (
 	Mysql = Database{
 		db: func() *sql.DB {
 			dbUser := "root"
-			dbPass := os.Getenv("DATABASE_PASSWORD")
+			dbPass := types.MYSQL_PASSWORD
 			dbName := "ticketing_system"
-			dbHost := "database:3306"
+			dbHost := "127.0.0.1:3306"
 			database, _ := sql.Open("mysql", dbUser+":"+dbPass+"@("+dbHost+")/"+dbName+"?parseTime=true")
 
 			database.SetMaxOpenConns(10)
@@ -37,22 +36,22 @@ func (h *Database) Close() {
 	h.db.Close()
 }
 
-//add user: [name, password, role] into database
+// add user: [name, password, role] into database
 func (h *Database) AddUser(user *types.Register) error {
 	user.Password = utils.HashPassword(user.Password)
 	_, err := h.db.Exec("INSERT INTO users (id, name, password, role) VALUES (UUID(), ?, ?, ?)", user.Username, user.Password, user.Role)
 	return err
 }
 
-//change password of a given user
+// change password of a given user
 func (h *Database) ChangePassword(username, password string) error {
 	_, err := h.db.Exec("UPDATE users SET password = ? WHERE name = ?",
 		utils.HashPassword(password), username)
 	return err
 }
 
-//create a ticket
-func (h *Database) AddTicket(ticket *types.CreateTicket) (bool, error) {
+// create a ticket
+func (h *Database) AddTicket(ticket *types.HTTPTicket) (bool, error) {
 	// insert new ticket into database
 	_, err := h.db.Exec("INSERT INTO tickets (id, issuer, date, title, status, content) VALUES (UUID(), ?, ?, ?, 0, ?)",
 		ticket.Issuer, time.Now().Format(time.RFC3339), ticket.Title, ticket.Content)
@@ -127,7 +126,7 @@ func (h *Database) GetTicket(ticketId string) (ticket types.Ticket, err error) {
 	return
 }
 
-func (h *Database) UpdateTicket(id string, ticket *types.CreateTicket) error {
+func (h *Database) UpdateTicket(id string, ticket *types.HTTPTicket) error {
 	_, err := h.db.Exec("UPDATE tickets SET title = ?, content = ?  WHERE id = ?",
 		ticket.Title, ticket.Content, id)
 	return err

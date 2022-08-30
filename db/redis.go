@@ -2,9 +2,9 @@ package db
 
 import (
 	"context"
-	"os"
 	"time"
 
+	"github.com/KameeKaze/Ticketing-system/types"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -16,8 +16,8 @@ type REDIS struct {
 var (
 	Redis = REDIS{
 		db: redis.NewClient(&redis.Options{
-			Addr:     "session-storage:6379",
-			Password: os.Getenv("DATABASE_PASSWORD"),
+			Addr:     "127.0.0.1:6379",
+			Password: types.REDIS_PASSWORD,
 			DB:       0,
 		}),
 	}
