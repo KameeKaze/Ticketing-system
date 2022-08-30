@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/KameeKaze/Ticketing-system/utils"
+	"github.com/joho/godotenv"
 )
 
 var (
@@ -13,6 +14,12 @@ var (
 	REDIS_PASSWORD = envVar("REDIS_PASSWORD")
 )
 
+func init() {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		utils.Logger.Info("Setting environment variables from .env")
+	}
+}
 func envVar(name string) (value string) {
 	value, err := os.LookupEnv(name)
 	if !err {
