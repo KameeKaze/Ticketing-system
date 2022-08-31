@@ -103,19 +103,13 @@ func UpdateTicketStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	status := chi.URLParam(r, "status")
-	statusCode := 0
 
-	switch status {
-	case "inprog":
-		statusCode = 1
-	case "closed":
-		statusCode = 2
-	default:
+	if _, found := types.TICKET_STATUSES[status]; !found {
 		createHttpResponse(w, http.StatusBadRequest, "Invalid status "+status)
 		return
 	}
 
-	if err := db.Mysql.UpdateTicketStatus(statusCode, chi.URLParam(r, "id")); err != nil {
+	if err := db.Mysql.UpdateTicketStatus(types.TICKET_STATUSES[status], chi.URLParam(r, "id")); err != nil {
 		utils.Logger.Error(err.Error())
 		createHttpResponse(w, http.StatusInternalServerError, "Database error")
 		return

@@ -7,7 +7,11 @@ import (
 )
 
 var (
-	ROLES          = []string{"programmer", "admin"}
+	ROLES           = []string{"programmer", "admin"}
+	TICKET_STATUSES = map[string]int{
+		"inprog": 1,
+		"closed": 2,
+	}
 	PORT           = envVar("PORT")
 	MYSQL_PASSWORD = envVar("MYSQL_PASSWORD")
 	REDIS_PASSWORD = envVar("REDIS_PASSWORD")
