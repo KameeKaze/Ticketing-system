@@ -6,7 +6,7 @@
  `admin:admin // change this password`
 
 ----
-**POST** `/register`
+**POST** `/api/register`
 ```
 Cookie: session=<sessionid>
 ```
@@ -19,7 +19,7 @@ Cookie: session=<sessionid>
 }
 ```
 ----
-**POST** `/login`
+**POST** `/api/login`
 
 ```
 {
@@ -28,7 +28,7 @@ Cookie: session=<sessionid>
 }
 ```
 ----
-**POST** `/changepassword`
+**POST** `/api/changepassword`
 ```
 Cookie: session=<sessionid>
 ```
@@ -41,13 +41,13 @@ Cookie: session=<sessionid>
 }
 ```
 ----
-**DELETE** `/logout`
+**DELETE** `/api/logout`
 
 ```
 Cookie: session=<sessionid>
 ```
 ----
-**POST** `/tickets`
+**POST** `/api/tickets`
 ```
 Cookie: session=<sessionid>
 ```
@@ -60,7 +60,7 @@ Cookie: session=<sessionid>
 
 
 ----
-**PUT** `/tickets/{id}`
+**PUT** `/api/tickets/{id}`
 ```
 Cookie: session=<sessionid>
 ```
@@ -71,15 +71,19 @@ Cookie: session=<sessionid>
 }
 ```
 ----
-**PUT** `/tickets/{id}/{status}`
+**PUT** `/api/tickets/{id}/{status}`
+
+{status}
+- inprog
+- closed
 ```
 Cookie: session=<sessionid>
 ```
 ----
-**GET** `/tickets?user={user1}&user={user2}`
+**GET** `/api/tickets?user={user1}&user={user2}`
 
 ----
-**DELETE** `/tickets/{ticketid}`
+**DELETE** `/api/tickets/{ticketid}`
 ```
 Cookie: session=<sessionid>
 ```
